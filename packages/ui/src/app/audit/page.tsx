@@ -10,6 +10,7 @@ import {
   type AuditEventDetail,
   type AuditQuery,
 } from "@/lib/api";
+import { useT } from "@/i18n";
 
 const PAGE_SIZE = 100;
 
@@ -158,6 +159,7 @@ function formatTimeOnly(ts: string): string {
 }
 
 export default function AuditPage() {
+  const t = useT();
   const [items, setItems] = useState<AuditEvent[]>([]);
   const [total, setTotal] = useState(0);
   const [eventTypes, setEventTypes] = useState<string[]>([]);

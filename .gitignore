@@ -78,3 +78,7 @@ evals/results/
 ~/.claude/anvil/
 *.db
 packages/ui/tsconfig.tsbuildinfo
+
+# Local runtime artifacts
+backend.log
+*.whl

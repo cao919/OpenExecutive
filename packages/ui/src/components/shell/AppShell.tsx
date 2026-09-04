@@ -9,12 +9,13 @@ import AskOEPanel from "@/components/askoe/AskOEPanel";
 import BrandMark from "@/components/BrandMark";
 import Icon, { IconName } from "@/components/Icon";
 import UserBadge from "@/components/UserBadge";
+import { useT } from "@/i18n";
 import {
-  BRIEFING_DESCRIPTION,
+  BRIEFING_KEYS,
   buildPrimaryNav,
   GUIDE_NAV_ITEM,
   MOBILE_PRIMARY,
-  NEW_CHAT_DESCRIPTION,
+  NEW_CHAT_KEYS,
   PULSE_NAV_ITEM,
   SETTINGS_NAV_ITEM,
 } from "@/components/shell/navConfig";
@@ -31,42 +32,44 @@ const EXEMPT_EXACT = new Set(["/"]);
 // post-onboarding, so the default `isOnboarded` is fine here.
 const NAV_GROUPS = buildPrimaryNav();
 
-// Human-readable labels for path segments shown in the breadcrumb.
-// Dynamic segments (slugs / ids) are rendered raw and truncated by CSS.
-const SEGMENT_LABELS: Record<string, string> = {
-  today: "Today",
-  talent: "Talent",
-  candidates: "Candidate",
-  searches: "Searches",
-  engagements: "Engagement",
-  review: "Review",
-  proposals: "Proposals",
-  people: "People",
-  departments: "Departments",
-  skills: "Skills",
-  memories: "Pulse",
-  knowledge: "Knowledge base",
-  jobs: "Jobs",
-  artifacts: "Artifacts",
-  runs: "Runs",
-  new: "New",
-  audit: "Audit log",
-  usage: "Token usage",
-  session: "Session",
-  council: "Agent Council",
-  architecture: "Architecture",
-  "company-profile": "Company profile",
-  "staff-onboarding": "Staff onboarding",
-  demo: "Company Simulator",
-  onboard: "Setup",
-  watchlist: "Watch list",
-  settings: "Settings",
-  guide: "User Guide",
-  clients: "Client Companies",
+// Map URL segment → i18n key. Anything not in this map is rendered raw
+// (and CSS-truncated) — pages own their own H1 with the entity name, so
+// the breadcrumb is mostly a section heading.
+const SEGMENT_LABEL_KEYS: Record<string, string> = {
+  today: "breadcrumb.today",
+  talent: "breadcrumb.talent",
+  candidates: "breadcrumb.candidates",
+  searches: "breadcrumb.searches",
+  engagements: "breadcrumb.engagements",
+  review: "breadcrumb.review",
+  proposals: "breadcrumb.proposals",
+  people: "breadcrumb.people",
+  departments: "breadcrumb.departments",
+  skills: "breadcrumb.skills",
+  memories: "breadcrumb.memories",
+  knowledge: "breadcrumb.knowledge",
+  jobs: "breadcrumb.jobs",
+  artifacts: "breadcrumb.artifacts",
+  runs: "breadcrumb.runs",
+  new: "breadcrumb.new",
+  audit: "breadcrumb.audit",
+  usage: "breadcrumb.usage",
+  session: "breadcrumb.session",
+  council: "breadcrumb.council",
+  architecture: "breadcrumb.architecture",
+  "company-profile": "breadcrumb.company-profile",
+  "staff-onboarding": "breadcrumb.staff-onboarding",
+  demo: "breadcrumb.demo",
+  onboard: "breadcrumb.onboard",
+  watchlist: "breadcrumb.watchlist",
+  settings: "breadcrumb.settings",
+  guide: "breadcrumb.guide",
+  clients: "breadcrumb.clients",
 };
 
-function labelFor(segment: string): string {
-  return SEGMENT_LABELS[segment] ?? segment;
+function labelFor(t: (k: string) => string, segment: string): string {
+  const key = SEGMENT_LABEL_KEYS[segment];
+  return key ? t(key) : segment;
 }
 
 // Is `href` the active section for the current pathname? Active when
@@ -142,6 +145,7 @@ function Rail({
   drawerOpen: boolean;
   onClose: () => void;
 }) {
+  const t = useT();
   return (
     <aside
       className={`
@@ -163,7 +167,7 @@ function Rail({
         </Link>
         <button
           type="button"
-          aria-label="Close menu"
+          aria-label={t("common.closeMenu")}
           onClick={onClose}
           className="lg:hidden min-h-touch min-w-touch flex items-center justify-center text-fg-muted hover:text-fg cursor-pointer rounded-lg hover:bg-surface-overlay transition-colors"
         >
@@ -179,9 +183,9 @@ function Rail({
             not a destination). */}
         <RailLink
           href="/?new=1"
-          label="New chat"
+          label={t(NEW_CHAT_KEYS.label)}
           icon="plus"
-          description={NEW_CHAT_DESCRIPTION}
+          description={t(NEW_CHAT_KEYS.description)}
           active={false}
           onClick={onClose}
           accent
@@ -192,9 +196,9 @@ function Rail({
             accordingly so the rail doesn't promise something else. */}
         <RailLink
           href="/"
-          label="Briefing"
+          label={t(BRIEFING_KEYS.label)}
           icon="clipboard"
-          description={BRIEFING_DESCRIPTION}
+          description={t(BRIEFING_KEYS.description)}
           active={pathname === "/"}
           onClick={onClose}
         />
@@ -202,26 +206,26 @@ function Rail({
             not buried in the Knowledge group. */}
         <RailLink
           href={PULSE_NAV_ITEM.href}
-          label={PULSE_NAV_ITEM.label}
+          label={t(PULSE_NAV_ITEM.labelKey)}
           icon={PULSE_NAV_ITEM.icon}
-          description={PULSE_NAV_ITEM.description}
+          description={t(PULSE_NAV_ITEM.descriptionKey)}
           active={isActive(PULSE_NAV_ITEM.href, pathname)}
           onClick={onClose}
         />
 
         {NAV_GROUPS.map((group) => (
-          <div key={group.key}>
+          <div key={group.labelKey}>
             <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-widest text-fg-subtle">
-              {group.label}
+              {t(group.labelKey)}
             </p>
             <div className="space-y-0.5">
               {group.items.map((item) => (
                 <RailLink
                   key={item.href}
                   href={item.href}
-                  label={item.label}
+                  label={t(item.labelKey)}
                   icon={item.icon}
-                  description={item.description}
+                  description={t(item.descriptionKey)}
                   active={isActive(item.href, pathname)}
                   onClick={onClose}
                 />
@@ -237,17 +241,17 @@ function Rail({
       <div className="px-2 pb-1 border-t border-line pt-2 space-y-0.5">
         <RailLink
           href={GUIDE_NAV_ITEM.href}
-          label={GUIDE_NAV_ITEM.label}
+          label={t(GUIDE_NAV_ITEM.labelKey)}
           icon={GUIDE_NAV_ITEM.icon}
-          description={GUIDE_NAV_ITEM.description}
+          description={t(GUIDE_NAV_ITEM.descriptionKey)}
           active={isActive(GUIDE_NAV_ITEM.href, pathname)}
           onClick={onClose}
         />
         <RailLink
           href={SETTINGS_NAV_ITEM.href}
-          label={SETTINGS_NAV_ITEM.label}
+          label={t(SETTINGS_NAV_ITEM.labelKey)}
           icon={SETTINGS_NAV_ITEM.icon}
-          description={SETTINGS_NAV_ITEM.description}
+          description={t(SETTINGS_NAV_ITEM.descriptionKey)}
           active={isActive(SETTINGS_NAV_ITEM.href, pathname)}
           onClick={onClose}
         />
@@ -302,6 +306,7 @@ function TopBar({
   segments: string[];
   onOpenDrawer: () => void;
 }) {
+  const t = useT();
   // Breadcrumb chain. Only the top-level section (segment[0]) is a real
   // route in this app — intermediate segments like `runs` in
   // `/jobs/runs/<id>` or `session` in `/audit/session/<id>` are not
@@ -311,7 +316,7 @@ function TopBar({
   const crumbs = segments.map((segment, idx) => {
     const linkable = idx === 0;
     const href = linkable ? "/" + segment : null;
-    return { href, label: labelFor(segment) };
+    return { href, label: labelFor(t, segment) };
   });
 
   return (
@@ -319,7 +324,7 @@ function TopBar({
       <div className="flex items-center gap-2 min-w-0">
         <button
           type="button"
-          aria-label="Open menu"
+          aria-label={t("common.openMenu")}
           onClick={onOpenDrawer}
           className="lg:hidden min-h-touch min-w-touch flex items-center justify-center text-fg-muted hover:text-fg cursor-pointer rounded-lg hover:bg-surface-overlay transition-colors"
         >
@@ -367,11 +372,12 @@ function TopBar({
 
 function AskOEButton() {
   const { open, toggle } = useAskOE();
+  const t = useT();
   return (
     <button
       type="button"
       onClick={toggle}
-      title="Ask OE about this page (Ctrl/Cmd + .)"
+      title={t("askOE.title")}
       aria-pressed={open}
       className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
         open
@@ -380,7 +386,7 @@ function AskOEButton() {
       }`}
     >
       <Icon name="bolt" size="w-4 h-4" />
-      <span className="hidden sm:inline">Ask OE</span>
+      <span className="hidden sm:inline">{t("askOE.label")}</span>
     </button>
   );
 }
@@ -403,6 +409,7 @@ export function MobileBottomNav({
   hideFrom?: "md" | "lg";
 }) {
   const hideClass = hideFrom === "md" ? "md:hidden" : "lg:hidden";
+  const t = useT();
   return (
     <nav
       aria-label="Primary"
@@ -414,13 +421,13 @@ export function MobileBottomNav({
           <Link
             key={item.href}
             href={item.href}
-            title={item.description}
+            title={t(item.descriptionKey)}
             className={`flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors ${
               active ? "text-indigo-300" : "text-fg-muted hover:text-fg"
             }`}
           >
             <Icon name={item.icon} size="w-5 h-5" />
-            <span className="text-[10px] font-medium">{item.label}</span>
+            <span className="text-[10px] font-medium">{t(item.labelKey)}</span>
           </Link>
         );
       })}
@@ -428,10 +435,10 @@ export function MobileBottomNav({
         type="button"
         onClick={onOpenDrawer}
         className="flex-1 flex flex-col items-center justify-center gap-0.5 text-fg-muted hover:text-fg transition-colors cursor-pointer"
-        aria-label="Open menu"
+        aria-label={t("common.openMenu")}
       >
         <Icon name="menu" size="w-5 h-5" />
-        <span className="text-[10px] font-medium">More</span>
+        <span className="text-[10px] font-medium">{t("common.more")}</span>
       </button>
     </nav>
   );

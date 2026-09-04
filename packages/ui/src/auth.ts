@@ -15,6 +15,34 @@ const ALLOWED_EMAILS_FALLBACK: ReadonlySet<string> = new Set(
 const BACKEND_BASE = process.env.BACKEND_BASE_URL ?? "http://localhost:8000";
 const BACKEND_SHARED_SECRET = process.env.BACKEND_SHARED_SECRET ?? "";
 
+// NextAuth (Auth.js v5) requires a non-empty `secret` for JWT signing/encryption
+// and refuses to handle any request without one — surfacing as a generic 500
+// from `/api/auth/*` routes. In dev we fall back through a chain so a fresh
+// checkout boots without manual env-var setup; production deployments MUST
+// set `AUTH_SECRET` (or `NEXTAUTH_SECRET`) explicitly. Reading BACKEND_SHARED_SECRET
+// second means a backend env-file configured for the dev server also gives us
+// a usable cookie secret without duplicating secrets.
+//
+// NextAuth v5's `assertConfig` reads `process.env.AUTH_SECRET` directly and
+// checks for non-empty BEFORE the `secret` config option is consulted — so we
+// must seed the env var itself, not just pass `secret` to NextAuth().
+const AUTH_SECRET =
+  process.env.AUTH_SECRET ??
+  process.env.NEXTAUTH_SECRET ??
+  BACKEND_SHARED_SECRET ??
+  "open-executive-dev-secret-not-for-production";
+
+if (!process.env.AUTH_SECRET) {
+  process.env.AUTH_SECRET = AUTH_SECRET;
+}
+
+if (AUTH_SECRET === "open-executive-dev-secret-not-for-production") {
+  // eslint-disable-next-line no-console
+  console.warn(
+    "[auth] Using built-in dev secret for NextAuth — set AUTH_SECRET in production.",
+  );
+}
+
 // 5-minute cache. Cheap insurance against hammering the backend on every
 // sign-in attempt and keeps sign-in latency bounded if the backend is
 // momentarily slow. NextAuth's signIn callback is server-side (Node
@@ -100,6 +128,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   // is corrected on next access, but also naturally expires within a
   // day so stale JWTs never coast forever.
   session: { strategy: "jwt", maxAge: 24 * 60 * 60 },
+  // See `AUTH_SECRET` resolution above — required for JWT signing.
+  secret: AUTH_SECRET,
   pages: {
     signIn: "/signin",
     error: "/signin",

@@ -3,11 +3,12 @@
 import { useMemo, useState } from "react";
 import Icon from "@/components/Icon";
 import type { SessionSummary } from "@/lib/api";
-import { groupSessionsByDate, type GroupKey } from "@/lib/sessionGroups";
+import { groupSessionsByDate } from "@/lib/sessionGroups";
 import { formatRelativeTime } from "@/lib/relativeTime";
+import { useT } from "@/i18n";
 
 const GROUP_CAP = 8;
-const DEFAULT_COLLAPSED = new Set<GroupKey>(["prev30", "older"]);
+const DEFAULT_COLLAPSED: ReadonlySet<"prev30" | "older"> = new Set(["prev30", "older"]);
 
 interface RecentSessionsProps {
   sessions: SessionSummary[];
@@ -16,12 +17,23 @@ interface RecentSessionsProps {
   onDelete: (sessionId: string) => void;
 }
 
+// Map group key → i18n dict key. Keep this in one place so the same
+// grouping is used everywhere sessions are bucketed by date.
+const GROUP_KEY_TO_I18N: Record<"today" | "yesterday" | "prev7" | "prev30" | "older", string> = {
+  today: "recentSessions.today",
+  yesterday: "recentSessions.yesterday",
+  prev7: "recentSessions.prev7",
+  prev30: "recentSessions.prev30",
+  older: "recentSessions.older",
+};
+
 export default function RecentSessions({
   sessions,
   activeSessionId,
   onSelect,
   onDelete,
 }: RecentSessionsProps) {
+  const t = useT();
   const [query, setQuery] = useState("");
   const [collapsedOverride, setCollapsedOverride] = useState<Record<string, boolean>>({});
   const [showAll, setShowAll] = useState<Set<string>>(new Set());
@@ -31,10 +43,11 @@ export default function RecentSessions({
 
   const filtered = useMemo(() => {
     if (!searching) return sessions;
+    const fallback = t("recentSessions.untitled");
     return sessions.filter((s) =>
-      (s.title || "Untitled chat").toLowerCase().includes(trimmedQuery),
+      (s.title || fallback).toLowerCase().includes(trimmedQuery),
     );
-  }, [sessions, searching, trimmedQuery]);
+  }, [sessions, searching, trimmedQuery, t]);
 
   const groups = useMemo(() => groupSessionsByDate(filtered), [filtered]);
 
@@ -43,12 +56,13 @@ export default function RecentSessions({
   // Stored collapse state (default-collapsed unless the user toggled it). While
   // searching we force every group open so matches are never hidden, but the
   // stored state is preserved and re-applies once the query is cleared.
-  const storedCollapsed = (key: GroupKey) =>
-    key in collapsedOverride ? collapsedOverride[key] : DEFAULT_COLLAPSED.has(key);
-  const isCollapsed = (key: GroupKey) => (searching ? false : storedCollapsed(key));
-  const toggleCollapse = (key: GroupKey) =>
+  const storedCollapsed = (key: keyof typeof GROUP_KEY_TO_I18N) =>
+    key in collapsedOverride ? collapsedOverride[key] : DEFAULT_COLLAPSED.has(key as "prev30" | "older");
+  const isCollapsed = (key: keyof typeof GROUP_KEY_TO_I18N) =>
+    searching ? false : storedCollapsed(key);
+  const toggleCollapse = (key: keyof typeof GROUP_KEY_TO_I18N) =>
     setCollapsedOverride((prev) => ({ ...prev, [key]: !storedCollapsed(key) }));
-  const revealAll = (key: GroupKey) =>
+  const revealAll = (key: keyof typeof GROUP_KEY_TO_I18N) =>
     setShowAll((prev) => new Set(prev).add(key));
 
   return (
@@ -56,7 +70,7 @@ export default function RecentSessions({
       {/* Pinned header — label + search, stays put while the list scrolls */}
       <div className="flex-shrink-0 px-2 pt-3 pb-2">
         <p className="px-2 pb-1.5 text-xs text-fg-subtle font-medium uppercase tracking-wide">
-          Recent
+          {t("recentSessions.title")}
         </p>
         <div className="relative">
           <Icon
@@ -68,8 +82,8 @@ export default function RecentSessions({
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search conversations"
-            aria-label="Search conversations"
+            placeholder={t("recentSessions.searchPlaceholder")}
+            aria-label={t("recentSessions.searchPlaceholder")}
             className="w-full rounded-lg bg-surface-input/60 border border-line pl-7 pr-2 py-1.5 text-xs text-fg placeholder:text-fg-subtle focus:outline-none focus:border-fg-subtle"
           />
         </div>
@@ -78,13 +92,16 @@ export default function RecentSessions({
       {/* Scrollable list */}
       <div className="overflow-y-auto min-h-0 max-h-[75vh] px-2 pb-2">
         {groups.length === 0 ? (
-          <p className="px-2 py-3 text-xs text-fg-subtle">No conversations match.</p>
+          <p className="px-2 py-3 text-xs text-fg-subtle">
+            {t("recentSessions.emptySearch")}
+          </p>
         ) : (
           groups.map((group) => {
             const collapsed = isCollapsed(group.key);
             const expandedAll = searching || showAll.has(group.key);
             const visible = expandedAll ? group.items : group.items.slice(0, GROUP_CAP);
             const hiddenCount = group.items.length - visible.length;
+            const groupLabel = t(GROUP_KEY_TO_I18N[group.key]);
             return (
               <div key={group.key} className="mb-1">
                 <button
@@ -99,7 +116,7 @@ export default function RecentSessions({
                     className={`transition-transform ${collapsed ? "" : "rotate-90"}`}
                   />
                   <span className="text-[11px] font-medium uppercase tracking-wide">
-                    {group.label}
+                    {groupLabel}
                   </span>
                   <span className="text-[10px] text-fg-subtle/70">{group.items.length}</span>
                 </button>
@@ -120,7 +137,7 @@ export default function RecentSessions({
                           className="flex-1 min-w-0 text-left px-2 py-2 pr-10 cursor-pointer"
                         >
                           <p className="text-xs truncate leading-snug">
-                            {s.title || "Untitled chat"}
+                            {s.title || t("recentSessions.untitled")}
                           </p>
                           <p className="text-[10px] text-fg-subtle mt-0.5">
                             {formatRelativeTime(s.updated_at)}
@@ -128,8 +145,8 @@ export default function RecentSessions({
                         </button>
                         <button
                           type="button"
-                          aria-label="Delete chat"
-                          title="Delete chat"
+                          aria-label={t("recentSessions.delete")}
+                          title={t("recentSessions.delete")}
                           onClick={(e) => {
                             e.stopPropagation();
                             onDelete(s.session_id);
@@ -146,7 +163,7 @@ export default function RecentSessions({
                         onClick={() => revealAll(group.key)}
                         className="w-full text-left px-2 py-1.5 text-[11px] text-fg-subtle hover:text-fg cursor-pointer"
                       >
-                        Show {hiddenCount} more
+                        {t("recentSessions.showMore", hiddenCount)}
                       </button>
                     )}
                   </div>

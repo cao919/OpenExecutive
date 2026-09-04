@@ -11,8 +11,10 @@ import {
 } from "@/lib/api";
 import { CandidateCard } from "@/components/talent/CandidateCard";
 import { STAGE_META, PIPELINE_STAGES } from "@/components/talent/stages";
+import { useT } from "@/i18n";
 
 export default function TalentPage() {
+  const t = useT();
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [engagements, setEngagements] = useState<Engagement[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,7 +51,7 @@ export default function TalentPage() {
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex items-baseline justify-between mb-6 gap-4 flex-wrap">
             <div>
-              <h1 className="text-xl font-semibold text-fg">Talent Pipeline</h1>
+              <h1 className="text-xl font-semibold text-fg">{t("pages.talent.title")}</h1>
               <p className="text-sm text-fg-muted mt-0.5">
                 Candidates across all searches, by stage. Manage open roles under{" "}
                 <Link href="/talent/searches" className="text-indigo-300 hover:text-indigo-200">

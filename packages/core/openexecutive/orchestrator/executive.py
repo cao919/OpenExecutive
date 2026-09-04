@@ -387,6 +387,7 @@ class Executive:
         person_id: int | None = None,
         briefing_context: str = "",
         page_context_block: str = "",
+        language_block: str = "",
     ) -> list[dict[str, Any]]:
         messages: list[dict[str, Any]] = []
         history = session.get_recent_history()
@@ -410,6 +411,17 @@ class Executive:
             messages.append(msg)
 
         user_content_parts: list[dict[str, Any]] = []
+
+        # User-selected response language for this turn. Injected FIRST so
+        # the language directive precedes every other per-request context
+        # block — the model reads "respond in zh" before it gets
+        # distracted by retrieved knowledge or specialist routing. Empty
+        # when unset, so the byte layout is unchanged for users without a
+        # language preference (existing default behaviour).
+        if language_block:
+            user_content_parts.append(
+                {"type": "text", "text": f"<response_language>\n{language_block}\n</response_language>"}
+            )
 
         # Name the human in the room first so the model never offers to loop
         # in / DM the person it is replying to. Lives in the user turn (never
@@ -486,6 +498,7 @@ class Executive:
         peer_memory_context: str | None = None,
         briefing_context: str = "",
         page_context_block: str = "",
+        language_block: str = "",
     ) -> AsyncIterator[str | dict[str, Any]]:
         """Stream a response from the Executive, routing to specialists as needed.
 
@@ -585,6 +598,7 @@ class Executive:
                 person_id=person_id,
                 briefing_context=briefing_context,
                 page_context_block=page_context_block,
+                language_block=language_block,
             )
 
             _emit_memory_snapshot(
@@ -705,6 +719,7 @@ class Executive:
         peer_memory_context: str | None = None,
         briefing_context: str = "",
         page_context_block: str = "",
+        language_block: str = "",
     ) -> AsyncIterator[str | dict[str, Any]]:
         """Committee-reviewed variant of stream_chat.
 
@@ -799,6 +814,7 @@ class Executive:
             person_id=person_id,
             briefing_context=briefing_context,
             page_context_block=page_context_block,
+            language_block=language_block,
         )
 
         # ----- Phase 1: drafting -----------------------------------------

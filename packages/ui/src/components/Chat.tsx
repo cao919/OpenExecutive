@@ -15,6 +15,7 @@ import {
   getSuggestedPrompts,
   streamChat,
 } from "@/lib/api";
+import { useLang, useT, useToggleLang } from "@/i18n";
 
 interface ChatProps {
   onDebugEvent?: (event: DebugEvent) => void;
@@ -52,6 +53,9 @@ const FALLBACK_SUBTITLE =
 export default function Chat({ onDebugEvent, initialMessages, initialSessionId, initialInput, autoSubmitInitialInput, onTurnComplete, onTurnStart }: ChatProps) {
   const { data: session } = useSession();
   const firstName = session?.user?.name?.trim().split(/\s+/)[0];
+  const t = useT();
+  const lang = useLang();
+  const toggleLang = useToggleLang();
 
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages ?? []);
   const [input, setInput] = useState(initialInput ?? "");
@@ -136,7 +140,7 @@ export default function Chat({ onDebugEvent, initialMessages, initialSessionId, 
 
     const filesForTurn = pendingFiles;
     const userBubbleContent = filesForTurn.length
-      ? `${message}${message ? "\n\n" : ""}📎 ${filesForTurn.length} file${filesForTurn.length === 1 ? "" : "s"} attached`
+      ? `${message}${message ? "\n\n" : ""}${t("chat.fileAttached", filesForTurn.length)}`
       : message;
 
     setInput("");
@@ -162,6 +166,7 @@ export default function Chat({ onDebugEvent, initialMessages, initialSessionId, 
       for await (const item of streamChat(message, sessionId, {
         committeeReview: committeeEnabled,
         files: filesForTurn,
+        language: lang,
       })) {
         if (item.type === "debug_event") {
           onDebugEvent?.(item);
@@ -208,7 +213,7 @@ export default function Chat({ onDebugEvent, initialMessages, initialSessionId, 
       const detail = err instanceof Error ? err.message : String(err);
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: `Something went wrong: ${detail}` },
+        { role: "assistant", content: t("chat.sendFailedWithDetail", detail) },
       ]);
       setStreamingContent("");
       setStreamingActions([]);
@@ -275,8 +280,8 @@ export default function Chat({ onDebugEvent, initialMessages, initialSessionId, 
               </div>
               <h2 className="text-xl font-semibold text-fg mb-2">
                 {firstName
-                  ? `Here's where we are, ${firstName}.`
-                  : "Here's where we are."}
+                  ? t("chat.welcomeWithName", firstName)
+                  : t("chat.welcomeNoName")}
               </h2>
               <p className="text-fg-muted text-sm max-w-sm mb-10">
                 {subtitle}
@@ -286,7 +291,7 @@ export default function Chat({ onDebugEvent, initialMessages, initialSessionId, 
                 className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-lg"
                 role="status"
                 aria-busy={isLoadingPrompts}
-                aria-label={isLoadingPrompts ? "Loading suggested prompts" : "Suggested prompts"}
+                aria-label={isLoadingPrompts ? t("chat.suggestedPromptsLoading") : t("chat.suggestedPromptsLabel")}
               >
                 {isLoadingPrompts
                   ? [0, 1, 2, 3].map((i) => (
@@ -334,9 +339,11 @@ export default function Chat({ onDebugEvent, initialMessages, initialSessionId, 
                     <BrandMark size="md" />
                   </div>
                   <div className="flex-1 pt-1.5">
-                    <div className="text-xs text-fg-muted mb-3 font-medium tracking-wide uppercase">Executive</div>
+                    <div className="text-xs text-fg-muted mb-3 font-medium tracking-wide uppercase">
+                      {t("chat.roleAssistant")}
+                    </div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <div className="flex gap-1.5" aria-label="Thinking">
+                      <div className="flex gap-1.5" aria-label={t("chat.thinkingLabel")}>
                         {[0, 1, 2].map((i) => (
                           <div
                             key={i}
@@ -348,7 +355,7 @@ export default function Chat({ onDebugEvent, initialMessages, initialSessionId, 
                       {committeePhase ? (
                         <CommitteePhaseIndicator phase={committeePhase} />
                       ) : isConsulting ? (
-                        <span className="text-xs text-fg-muted italic">Consulting specialists…</span>
+                        <span className="text-xs text-fg-muted italic">{t("chat.consultingSpecialists")}</span>
                       ) : null}
                     </div>
                   </div>
@@ -364,7 +371,7 @@ export default function Chat({ onDebugEvent, initialMessages, initialSessionId, 
       <div className="border-t border-line bg-surface px-4 sm:px-6 py-3 sm:py-4">
         <div className="max-w-3xl mx-auto">
           {pendingFiles.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-2" aria-label="Pending attachments">
+            <div className="flex flex-wrap gap-2 mb-2" aria-label={t("chat.pendingAttachments")}>
               {pendingFiles.map((f, i) => (
                 <div
                   key={`${f.name}-${f.size}-${i}`}
@@ -376,7 +383,7 @@ export default function Chat({ onDebugEvent, initialMessages, initialSessionId, 
                   <button
                     type="button"
                     onClick={() => removePendingFile(i)}
-                    aria-label={`Remove ${f.name}`}
+                    aria-label={t("chat.removeAttachment", f.name)}
                     className="flex-shrink-0 w-5 h-5 rounded hover:bg-line-strong/50 flex items-center justify-center cursor-pointer"
                   >
                     <Icon name="close" size="w-3 h-3" />
@@ -401,10 +408,10 @@ export default function Chat({ onDebugEvent, initialMessages, initialSessionId, 
               disabled={isLoading || pendingFiles.length >= MAX_FILES_PER_TURN}
               title={
                 pendingFiles.length >= MAX_FILES_PER_TURN
-                  ? `Limit ${MAX_FILES_PER_TURN} files per message`
-                  : "Attach files or photos (PDF, DOCX, TXT, MD, CSV, images)"
+                  ? t("chat.attachLimit", MAX_FILES_PER_TURN)
+                  : t("chat.attachHint")
               }
-              aria-label="Attach files"
+              aria-label={t("chat.uploadFile")}
               className="flex-shrink-0 min-h-touch min-w-touch w-10 h-10 rounded-xl bg-surface-overlay border border-line-strong text-fg-muted hover:text-fg hover:border-line-strong disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-150 flex items-center justify-center cursor-pointer"
             >
               <Icon name="paperclip" size="w-4 h-4" />
@@ -414,18 +421,46 @@ export default function Chat({ onDebugEvent, initialMessages, initialSessionId, 
               value={input}
               onChange={handleTextareaChange}
               onKeyDown={handleKeyDown}
-              placeholder="What's on your mind?"
+              placeholder={t("chat.placeholder")}
               rows={1}
               disabled={isLoading}
-              aria-label="Message"
+              aria-label={t("chat.messageAriaLabel")}
               className="flex-1 bg-transparent text-fg placeholder:text-fg-muted text-sm sm:text-base leading-relaxed resize-none focus:outline-none disabled:opacity-50 max-h-40 overflow-y-auto"
               style={{ minHeight: "24px" }}
             />
             <button
               type="button"
+              onClick={toggleLang}
+              disabled={isLoading}
+              title={
+                lang === "zh"
+                  ? "当前界面与回复语言：简体中文。点击切换为 English。"
+                  : "Current UI and reply language: English. Click to switch to 简体中文。"
+              }
+              aria-label={
+                lang === "zh"
+                  ? "Language: Chinese. Click to switch to English."
+                  : "Language: English. Click to switch to Chinese."
+              }
+              className={
+                "flex-shrink-0 min-h-touch px-3 rounded-xl text-xs font-medium transition-all duration-150 border cursor-pointer " +
+                (lang === "zh"
+                  ? "bg-emerald-500/15 border-emerald-500/60 text-emerald-300 hover:bg-emerald-500/20"
+                  : "bg-sky-500/15 border-sky-500/60 text-sky-300 hover:bg-sky-500/20") +
+                " disabled:opacity-30 disabled:cursor-not-allowed"
+              }
+            >
+              {lang === "zh" ? t("language.badgeZH") : t("language.badgeEN")}
+            </button>
+            <button
+              type="button"
               onClick={() => setCommitteeEnabled((v) => !v)}
               disabled={isLoading}
-              title="Committee review: slower, higher-quality response — adversarial review pass before sending"
+              title={
+                committeeEnabled
+                  ? t("chat.committeeTitleOn")
+                  : t("chat.committeeTitleOff")
+              }
               aria-pressed={committeeEnabled}
               className={
                 "flex-shrink-0 min-h-touch px-3 rounded-xl text-xs font-medium transition-all duration-150 border cursor-pointer " +
@@ -435,24 +470,23 @@ export default function Chat({ onDebugEvent, initialMessages, initialSessionId, 
                 " disabled:opacity-30 disabled:cursor-not-allowed"
               }
             >
-              Committee
+              {t("chat.committeeLabel")}
             </button>
             <button
               type="button"
               onClick={() => handleSend()}
               disabled={(!input.trim() && pendingFiles.length === 0) || isLoading}
-              aria-label="Send message"
+              aria-label={t("chat.sendAriaLabel")}
               className="flex-shrink-0 min-h-touch min-w-touch w-10 h-10 rounded-xl bg-indigo-500 hover:bg-indigo-400 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-150 flex items-center justify-center cursor-pointer"
             >
               <Icon name="arrow-send" size="w-4 h-4" className="text-white" />
             </button>
           </div>
           <p className="text-center text-xs text-fg-muted mt-2 inline-flex items-center justify-center gap-1.5 w-full">
-            <span className="hidden sm:inline">Enter to send · Shift+Enter for new line</span>
-            <span className="sm:hidden">Tap send</span>
+            <span className="hidden sm:inline">{t("chat.enterHint")}</span>
+            <span className="sm:hidden">{t("chat.mobileEnterHint")}</span>
             <InfoTip align="right">
-              Your Executive routes your question to the right specialist
-              behind the scenes — you don&apos;t pick which one.
+              {t("chat.infoTip")}
             </InfoTip>
           </p>
         </div>

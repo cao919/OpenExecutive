@@ -5,24 +5,28 @@ import { IconName } from "@/components/Icon";
 // (`components/shell/AppShell.tsx`) build their menus from here, so the
 // two navs can never drift apart again. When adding a destination, add
 // it ONCE in this file.
+//
+// i18n: every visible string is stored as a `labelKey` / `descriptionKey`
+// pointing into the zh/en dictionaries. Consumers call `t(item.labelKey)`
+// to resolve at render time. This keeps navConfig a pure data module —
+// no React hooks here — while still being localizable. The fallback
+// behaviour when a key is missing is documented in I18nProvider.
 
 export interface NavItem {
   href: string;
-  label: string;
+  /** Dotted path into the i18n dictionary (e.g. "menu.review"). */
+  labelKey: string;
   icon: IconName;
-  /**
-   * One-line plain-language explanation of the destination, surfaced as a
-   * tooltip in the rail/sidebar and as card copy on the Settings hub.
-   * Required so every new destination ships with an explanation.
-   */
-  description: string;
+  /** One-line plain-language explanation, also a dict key. Required so
+   *  every new destination ships with an explanation. */
+  descriptionKey: string;
   /** Optional pending-count badge (e.g. items awaiting review). */
   badge?: number;
 }
 
 export interface NavGroup {
-  key: string;
-  label: string;
+  /** Translation key for the group heading (e.g. "navGroup.workspace"). */
+  labelKey: string;
   items: NavItem[];
 }
 
@@ -43,204 +47,195 @@ interface BuildOpts {
 export function buildPrimaryNav({ isOnboarded = true, reviewBadge = 0 }: BuildOpts = {}): NavGroup[] {
   return [
     {
-      key: "workspace",
-      label: "Workspace",
+      labelKey: "navGroup.workspace",
       items: [
         {
           href: "/review",
-          label: "Review",
+          labelKey: "menu.review",
           icon: "check-circle",
           badge: reviewBadge,
-          description:
-            "Approve, reject, or correct incoming knowledge before the Executive relies on it.",
+          descriptionKey: "menuDesc.review",
         },
         {
           href: "/jobs",
-          label: "Jobs",
+          labelKey: "menu.jobs",
           icon: "doc",
-          description:
-            "Multi-step workflows that produce a deliverable — board prep, GTM plans, reviews.",
+          descriptionKey: "menuDesc.jobs",
         },
         {
           href: "/artifacts",
-          label: "Artifacts",
+          labelKey: "menu.artifacts",
           icon: "book",
-          description: "Your library of finished documents — drafts and workflow outputs.",
+          descriptionKey: "menuDesc.artifacts",
         },
         {
           href: "/watchlist",
-          label: "Watch list",
+          labelKey: "menu.watchList",
           icon: "eye",
-          description: "External monitors — tickers, feeds, status pages — that raise alerts.",
+          descriptionKey: "menuDesc.watchList",
         },
       ],
     },
     {
-      key: "company",
-      label: "Company",
+      labelKey: "navGroup.company",
       items: [
         {
           href: "/departments",
-          label: "Departments",
+          labelKey: "menu.departments",
           icon: "grid",
-          description: "Org units with goals, an authority level, and a specialist behind each.",
+          descriptionKey: "menuDesc.departments",
         },
         {
           href: "/people",
-          label: "People",
+          labelKey: "menu.people",
           icon: "users",
-          description:
-            "Your roster — who the Executive coordinates with and their approval scopes.",
+          descriptionKey: "menuDesc.people",
         },
         {
           href: "/talent",
-          label: "Talent",
+          labelKey: "menu.talent",
           icon: "clipboard",
-          description: "Candidate searches and hiring engagements.",
+          descriptionKey: "menuDesc.talent",
         },
         {
           href: "/staff-onboarding",
-          label: "Staff onboarding",
+          labelKey: "menu.staffOnboarding",
           icon: "users",
-          description: "Onboarding plans for new hires — progress, tasks, and welcome briefs.",
+          descriptionKey: "menuDesc.staffOnboarding",
         },
         {
           href: isOnboarded ? "/company-profile" : "/onboard",
-          label: isOnboarded ? "Company profile" : "Set up company",
+          labelKey: isOnboarded ? "menu.companyProfile" : "menu.setUpCompany",
           icon: "building",
-          description: "Your company's identity and strategy — set up once, edited any time.",
+          descriptionKey: "menuDesc.companyProfile",
         },
       ],
     },
     {
-      key: "knowledge",
-      label: "Knowledge",
+      labelKey: "navGroup.knowledge",
       items: [
         {
           href: "/knowledge",
-          label: "Knowledge base",
+          labelKey: "menu.knowledgeBase",
           icon: "book",
-          description:
-            "Upload company documents so the Executive can ground its answers in your context.",
+          descriptionKey: "menuDesc.knowledgeBase",
         },
         {
           href: "/skills",
-          label: "Skills",
+          labelKey: "menu.skills",
           icon: "bolt",
-          description: "Reusable how-to procedures — checklists, playbooks, templates.",
+          descriptionKey: "menuDesc.skills",
         },
       ],
     },
   ];
 }
 
-// Pinned, always-visible top-level destination — rendered as a standalone link
-// directly beneath Briefing in BOTH navs (rail + chat-home sidebar), the same
-// way Briefing is. Kept here as the single source so the two navs stay in sync.
+// Pinned, always-visible top-level destination — rendered as a standalone
+// link directly beneath Briefing in BOTH navs (rail + chat-home sidebar),
+// the same way Briefing is. Kept here as the single source so the two
+// navs stay in sync.
 export const PULSE_NAV_ITEM: NavItem = {
   href: "/memories",
-  label: "Pulse",
+  labelKey: "nav.pulse",
   icon: "activity",
-  description:
-    "The Executive's memory and heartbeat — what it knows and the rhythm it runs on.",
+  descriptionKey: "nav.descPulse",
 };
 
 // Single rail/sidebar entry that leads to the Settings hub.
 export const SETTINGS_NAV_ITEM: NavItem = {
   href: "/settings",
-  label: "Settings",
+  labelKey: "nav.settings",
   icon: "cog",
-  description: "Configuration, diagnostics, and power-user tools.",
+  descriptionKey: "nav.descSettings",
 };
 
 // User Guide — pinned next to Settings in both nav footers so help is
 // always one click away (it also stays listed on the Settings hub).
 export const GUIDE_NAV_ITEM: NavItem = {
   href: "/guide",
-  label: "User Guide",
+  labelKey: "nav.userGuide",
   icon: "info",
-  description: "Plain-language overviews of every feature — what each one is and what it does.",
+  descriptionKey: "nav.descUserGuide",
 };
 
-// Descriptions for the two chat-home actions that aren't NavItems (they
-// toggle modes rather than navigate). Shared by MOBILE_PRIMARY, the rail
-// (AppShell), and the chat-home sidebar so the copy lives once.
-export const NEW_CHAT_DESCRIPTION = "Start a fresh conversation with the Executive.";
-export const BRIEFING_DESCRIPTION =
-  "Land on a daily brief of what's happened and what needs you.";
+// Keys for the two chat-home actions that aren't NavItems (they
+// toggle modes rather than navigate). Components resolve them with
+// t("nav.newChat") / t("nav.briefing") / t("nav.descNewChat") / etc.
+export const NEW_CHAT_KEYS = {
+  label: "nav.newChat",
+  description: "nav.descNewChat",
+} as const;
+export const BRIEFING_KEYS = {
+  label: "nav.briefing",
+  description: "nav.descBriefing",
+} as const;
 
-// Admin / power-user tools surfaced on the Settings hub page rather than
-// in the primary nav — they aren't part of the day-to-day loop.
+// Admin / power-user tools surfaced on the Settings hub page rather
+// than in the primary nav — they aren't part of the day-to-day loop.
 export const ADVANCED_ITEMS: NavItem[] = [
   {
     href: "/council",
-    label: "Agent Council",
+    labelKey: "menu.agentCouncil",
     icon: "users",
-    description:
-      "Configure the agents — models, system prompts, deep-reasoning, and the Executive voice persona.",
+    descriptionKey: "menuDesc.agentCouncil",
   },
   {
     href: "/audit",
-    label: "Audit log",
+    labelKey: "menu.auditLog",
     icon: "doc-search",
-    description:
-      "Searchable event log of every chat turn, specialist consult, tool call, and scheduled action.",
+    descriptionKey: "menuDesc.auditLog",
   },
   {
     href: "/audit/usage",
-    label: "Token usage",
+    labelKey: "menu.tokenUsage",
     icon: "activity",
-    description:
-      "Aggregate token usage and cost across all sessions — totals, by day, and by model.",
+    descriptionKey: "menuDesc.tokenUsage",
   },
   {
     href: "/guide",
-    label: "User Guide",
+    labelKey: "nav.userGuide",
     icon: "info",
-    description:
-      "Plain-language overviews of every feature — what each one is and what it does.",
+    descriptionKey: "nav.descUserGuide",
   },
   {
     href: "/architecture",
-    label: "Architecture",
+    labelKey: "menu.architecture",
     icon: "grid",
-    description: "Interactive reference docs explaining how the system is built.",
+    descriptionKey: "menuDesc.architecture",
   },
   {
     href: "/demo",
-    label: "Company Simulator",
+    labelKey: "menu.companySimulator",
     icon: "cog",
-    description:
-      "Load prebuilt company fixtures, snapshot your current data, or generate a new scenario with AI.",
+    descriptionKey: "menuDesc.companySimulator",
   },
   {
     href: "/clients",
-    label: "Client Companies",
+    labelKey: "menu.clientCompanies",
     icon: "building",
-    description:
-      "Multi-client mode for fractional work — switch the live company between named client slots.",
+    descriptionKey: "menuDesc.clientCompanies",
   },
 ];
 
 // Anchors the mobile bottom nav. ≤5 per Material guidance; "More" opens
 // the drawer with the full menu. `/` lands on the briefing surface.
 export const MOBILE_PRIMARY: NavItem[] = [
-  { href: "/", label: "Briefing", icon: "clipboard", description: BRIEFING_DESCRIPTION },
+  { href: "/", labelKey: BRIEFING_KEYS.label, icon: "clipboard", descriptionKey: BRIEFING_KEYS.description },
   PULSE_NAV_ITEM,
   // `?new=1` signals the chat home to reset to a fresh chat and strip
   // the query — see the effect in app/page.tsx.
-  { href: "/?new=1", label: "New chat", icon: "plus", description: NEW_CHAT_DESCRIPTION },
+  { href: "/?new=1", labelKey: NEW_CHAT_KEYS.label, icon: "plus", descriptionKey: NEW_CHAT_KEYS.description },
   {
     href: "/people",
-    label: "People",
+    labelKey: "menu.people",
     icon: "users",
-    description: "Your roster — who the Executive coordinates with and their approval scopes.",
+    descriptionKey: "menuDesc.people",
   },
   {
     href: "/jobs",
-    label: "Jobs",
+    labelKey: "menu.jobs",
     icon: "doc",
-    description:
-      "Multi-step workflows that produce a deliverable — board prep, GTM plans, reviews.",
+    descriptionKey: "menuDesc.jobs",
   },
 ];

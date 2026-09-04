@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 import DynamicSection from '@/components/architecture/DynamicSection';
+import { useT } from '@/i18n';
 
 // The section nav is hardcoded so the sidebar renders instantly without
 // waiting for the backend. IDs must match the SECTIONS registry in
@@ -73,6 +74,7 @@ function DiagramLegend() {
 }
 
 export default function ArchitecturePage() {
+  const t = useT();
   const [activeSection, setActiveSection] = useState('overview');
   const [sectionMeta, setSectionMeta] = useState<Record<string, SectionMeta>>({});
   const observerRef = useRef<IntersectionObserver | null>(null);

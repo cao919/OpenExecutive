@@ -13,6 +13,7 @@ import { MobileBottomNav } from "@/components/shell/AppShell";
 import { buildPrimaryNav, GUIDE_NAV_ITEM, SETTINGS_NAV_ITEM } from "@/components/shell/navConfig";
 import UserBadge from "@/components/UserBadge";
 import { ChatMessage, DebugEvent, ReviewStats, SessionSummary, deleteSession, getReviewStats, getSessionMessages, listSessions } from "@/lib/api";
+import { useT } from "@/i18n";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -25,6 +26,7 @@ interface HealthData {
 export default function HomePage() {
   const { data: session } = useSession();
   const firstName = session?.user?.name?.trim().split(/\s+/)[0];
+  const t = useT();
 
   const [health, setHealth] = useState<HealthData | null>(null);
   const [debugOpen, setDebugOpen] = useState(false);
@@ -275,20 +277,20 @@ export default function HomePage() {
           <Link
             href={GUIDE_NAV_ITEM.href}
             onClick={() => setMobileNavOpen(false)}
-            title={GUIDE_NAV_ITEM.description}
+            title={t(GUIDE_NAV_ITEM.descriptionKey)}
             className="px-3 py-2.5 min-h-touch rounded-lg hover:bg-surface-overlay text-fg-muted hover:text-fg flex items-center gap-2.5 text-sm transition-colors cursor-pointer"
           >
             <Icon name={GUIDE_NAV_ITEM.icon} size="w-4 h-4" />
-            <span className="flex-1">{GUIDE_NAV_ITEM.label}</span>
+            <span className="flex-1">{t(GUIDE_NAV_ITEM.labelKey)}</span>
           </Link>
           <Link
             href={SETTINGS_NAV_ITEM.href}
             onClick={() => setMobileNavOpen(false)}
-            title={SETTINGS_NAV_ITEM.description}
+            title={t(SETTINGS_NAV_ITEM.descriptionKey)}
             className="px-3 py-2.5 min-h-touch rounded-lg hover:bg-surface-overlay text-fg-muted hover:text-fg flex items-center gap-2.5 text-sm transition-colors cursor-pointer"
           >
             <Icon name={SETTINGS_NAV_ITEM.icon} size="w-4 h-4" />
-            <span className="flex-1">{SETTINGS_NAV_ITEM.label}</span>
+            <span className="flex-1">{t(SETTINGS_NAV_ITEM.labelKey)}</span>
           </Link>
         </div>
 
@@ -312,7 +314,7 @@ export default function HomePage() {
               <Icon name="menu" size="w-5 h-5" />
             </button>
             <span className="text-xs text-fg-muted font-medium truncate">
-              {isOnboarded && companyName ? `${companyName} · Executive` : "Executive"}
+              {isOnboarded && companyName ? `${companyName} · ${t("home.companyBrandSub")}` : t("home.companyBrandSub")}
             </span>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
@@ -335,10 +337,10 @@ export default function HomePage() {
         {!isOnboarded && health && (
           <div className="border-b border-line bg-indigo-500/5 px-4 sm:px-6 py-2.5 flex items-center justify-between gap-3">
             <p className="text-xs text-fg-muted">
-              No company profile — responses will be generic.
+              {t("home.noCompanyProfile")}
             </p>
             <Link href="/onboard" className="text-xs text-indigo-400 hover:text-indigo-300 font-medium transition-colors whitespace-nowrap cursor-pointer">
-              Set up profile →
+              {t("home.setUpProfile")} →
             </Link>
           </div>
         )}

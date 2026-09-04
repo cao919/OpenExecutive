@@ -21,6 +21,7 @@ import {
   type Today,
 } from "@/lib/api";
 import { clientCountsSummary, renewalBadge } from "@/lib/practice";
+import { useT } from "@/i18n";
 import InfoTip from "./InfoTip";
 import { phaseLabel } from "./onboarding/meta";
 import { SectionHeading } from "./memories/shared";
@@ -258,6 +259,7 @@ function personStatusChip(person: PersonBriefItem): { label: string; cls: string
 }
 
 function PersonRow({ person }: { person: PersonBriefItem }) {
+  const t = useT();
   const chip = personStatusChip(person);
   const pills = person.authority_scope.slice(0, 2);
   const extraPills = person.authority_scope.length - pills.length;
@@ -282,7 +284,7 @@ function PersonRow({ person }: { person: PersonBriefItem }) {
               {chip.label}
             </span>
           ) : (
-            <span className="text-[10px] text-fg-subtle">Clear</span>
+            <span className="text-[10px] text-fg-subtle">{t("briefing.clear")}</span>
           )}
           {chip && person.status === "awaiting" && person.soonest_sla_at && (
             <div className={`text-[10px] mt-0.5 ${person.overdue ? "text-rose-300" : "text-fg-muted"}`}>
@@ -881,11 +883,12 @@ function ProposalCard({
 // nudges). Ambient/awareness content in the right column, always visible (no
 // approval needed). Takes its anchor `id` as a prop (set by the caller).
 function InFlightPanel({ inFlight, id }: { inFlight: InFlightItem[]; id?: string }) {
+  const t = useT();
   if (inFlight.length === 0) return null;
   return (
     <section id={id} className="rounded-xl border border-line bg-surface-elevated p-4">
       <div className="flex items-center gap-1.5 mb-1">
-        <SectionHeading title="In flight" count={inFlight.length} icon="bolt" />
+        <SectionHeading title={t("briefing.sectionInFlight")} count={inFlight.length} icon="bolt" />
         <InfoTip align="left">
           What the Executive is about to do (scheduled follow-ups &amp;
           nudges). Nothing here needs your approval — it&apos;s a heads-up.
@@ -937,6 +940,7 @@ function TalentCard({
   item: TalentBriefItem;
   onContinue?: (p: string) => void;
 }) {
+  const t = useT();
   const status = STATUS_META[item.status as keyof typeof STATUS_META];
   const badges: { label: string; pill: string }[] = [];
   const expiringSoon = item.offers_expiring_soon ?? 0;
@@ -1001,7 +1005,7 @@ function TalentCard({
           );
         })}
         {item.candidate_count === 0 && (
-          <span className="text-[10px] text-fg-subtle">No candidates yet</span>
+          <span className="text-[10px] text-fg-subtle">{t("briefing.noCandidates")}</span>
         )}
       </div>
       {badges.length > 0 && (
@@ -1111,12 +1115,13 @@ function PracticeClientsPanel({
   clients: ClientCockpitCard[];
   id?: string;
 }) {
+  const t = useT();
   if (clients.length === 0) return null;
   return (
     <section id={id} className="rounded-xl border border-line bg-surface-elevated p-4">
       <div className="flex items-center justify-between gap-2 mb-1">
         <div className="flex items-center gap-1.5">
-          <SectionHeading title="Across your clients" count={clients.length} icon="building" />
+          <SectionHeading title={t("briefing.sectionAcrossClients")} count={clients.length} icon="building" />
           <InfoTip align="left">
             Your parked client companies. Counts reflect each client&apos;s last
             save point; switch to a client on the Clients page to work in it.
@@ -1266,11 +1271,12 @@ function MonitoringPanel({
   onDismiss?: (p: ProposalItem) => void;
   id?: string;
 }) {
+  const t = useT();
   if (proposals.length === 0) return null;
   return (
     <section id={id} className="rounded-xl border border-line bg-surface-elevated p-4">
       <div className="flex items-center gap-1.5 mb-1">
-        <SectionHeading title="Monitoring" count={proposals.length} icon="eye" />
+        <SectionHeading title={t("briefing.sectionMonitoring")} count={proposals.length} icon="eye" />
         <InfoTip align="left">
           Passive signals (watchlist tickers, vendor status, external news)
           the Executive is tracking. Nothing here needs a decision — tap one

@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useAskOEFormContext } from "@/components/askoe/AskOEContext";
+import { useT } from "@/i18n";
 import {
   getCompanyProfile,
   updateCompanyProfile,
@@ -258,6 +259,7 @@ function usePendingSection(
 // ── page ─────────────────────────────────────────────────────────────────────
 
 export default function CompanyProfilePage() {
+  const t = useT();
   const [profile, setProfile] = useState<CompanyProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);

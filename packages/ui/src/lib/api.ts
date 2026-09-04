@@ -109,6 +109,11 @@ export interface StreamChatOptions {
   // Ask OE panel only — what page/form the user is looking at. Ignored on
   // the multipart route (the panel doesn't support attachments).
   pageContext?: PageContext;
+  // Force the assistant's reply language for this turn. "zh" → Simplified
+  // Chinese; "en" → English. Undefined → let the model follow the user's
+  // input language (existing default). Persisted to localStorage by the
+  // Chat component so the toggle survives reloads.
+  language?: "zh" | "en";
 }
 
 export async function* streamChat(
@@ -118,6 +123,7 @@ export async function* streamChat(
 ): AsyncGenerator<StreamItem> {
   const files = opts?.files ?? [];
   const committeeReview = opts?.committeeReview ?? false;
+  const language = opts?.language;
 
   let response: Response;
   if (files.length > 0) {
@@ -125,6 +131,7 @@ export async function* streamChat(
     form.append("message", message);
     if (sessionId) form.append("session_id", sessionId);
     form.append("committee_review", String(committeeReview));
+    if (language) form.append("language", language);
     for (const file of files) form.append("files", file, file.name);
     response = await fetch(`${API_BASE}/chat/upload`, {
       method: "POST",
@@ -139,6 +146,7 @@ export async function* streamChat(
         session_id: sessionId,
         committee_review: committeeReview,
         page_context: opts?.pageContext ?? undefined,
+        language: language ?? undefined,
       }),
     });
   }

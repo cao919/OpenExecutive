@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -56,6 +56,13 @@ class ChatRequest(BaseModel):
     committee_review: bool = False
     # Set by the Ask OE side panel only; absent on the main chat page.
     page_context: PageContext | None = None
+    # User-selected response language for this turn. "zh" forces Chinese,
+    # "en" forces English. Absent / None = let the model follow the user's
+    # input language (existing default). Picked up by executive.py via the
+    # `_build_language_block` helper, injected as a <response_language>
+    # block at the top of the user turn so every iteration of the agent
+    # loop (and every specialist dispatch) inherits it via history.
+    language: Literal["zh", "en"] | None = None
 
 
 class ChatResponse(BaseModel):

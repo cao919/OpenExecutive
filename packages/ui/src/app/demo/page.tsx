@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useT } from "@/i18n";
+
 import {
   FixtureSummary,
   FixtureLoadResult,
@@ -52,6 +54,7 @@ function stageBadge(stage: string) {
 }
 
 export default function DemoPage() {
+  const t = useT();
   const [fixtures, setFixtures] = useState<FixtureSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -264,7 +267,7 @@ export default function DemoPage() {
     <div className="min-h-full bg-surface">
       <div className="border-b border-line px-6 py-5 flex items-start justify-between gap-4 flex-wrap">
         <div className="min-w-0">
-          <h1 className="text-xl font-semibold text-fg">Company Simulator</h1>
+          <h1 className="text-xl font-semibold text-fg">{t("pages.demo.title")}</h1>
           <p className="text-xs text-fg-muted mt-1">
             Put the Executive in a real-world scenario. Load a simulated company — full profile, documents, and memory — and test how it reasons, prioritizes, and decides before you trust it with your own.
           </p>

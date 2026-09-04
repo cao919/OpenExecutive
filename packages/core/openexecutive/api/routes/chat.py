@@ -123,6 +123,34 @@ def _build_page_context_block(page_context: PageContext | None) -> str:
     return "\n".join(lines)
 
 
+def _build_language_block(language: str | None) -> str:
+    """Render the user's selected response language for the user turn.
+
+    Pure string builder; returns "" when no language is selected (so the
+    main chat path remains byte-identical to before). Injected at the
+    top of the user content so every iteration of the agent loop — and
+    every specialist dispatch that inherits conversation history — sees
+    the directive. The two phrases are deliberately explicit about NOT
+    mirroring the user's input language, which is the failure mode we
+    saw with bilingual users typing back-and-forth.
+    """
+    if language == "zh":
+        return (
+            "请始终使用简体中文（zh-CN）回复用户。技术术语、品牌名、代码片段、"
+            "英文人名可保留英文原文。用户的提问语种不应影响回复语种——"
+            "一旦本会话选择中文，即使用户后续切换为英文提问，回复也必须保持中文。"
+        )
+    if language == "en":
+        return (
+            "Always reply in English (en-US). Technical terms, brand names, "
+            "code snippets, and non-English proper nouns may stay in their "
+            "original language. The user's input language must not affect the "
+            "reply language — once English is selected for this turn, all "
+            "replies must remain in English regardless of subsequent user input."
+        )
+    return ""
+
+
 def _resolve_caller_person_id(request: Request) -> int | None:
     """Resolve the calling Person from the `x-caller-email` header.
 
@@ -157,6 +185,7 @@ async def _run_chat_turn(
     attachment_blocks: list[dict[str, Any]] | None,
     request: Request,
     page_context: PageContext | None = None,
+    language: str | None = None,
 ) -> StreamingResponse:
     """Shared streaming-chat handler for both the JSON and multipart routes.
 
@@ -309,6 +338,7 @@ async def _run_chat_turn(
     logger.info("chat.knowledge_done turn_id=%s chunks=%d", turn_id, len(sources))
 
     page_context_block = _build_page_context_block(page_context)
+    language_block = _build_language_block(language)
 
     executive = Executive(mcp_gateway=getattr(request.app.state, "mcp_gateway", None))
     settings = get_settings()
@@ -351,6 +381,7 @@ async def _run_chat_turn(
                     peer_memory_context=peer_memory_context,
                     briefing_context=briefing_context,
                     page_context_block=page_context_block,
+                    language_block=language_block,
                 ).__aiter__()
             else:
                 stream = executive.stream_chat(
@@ -364,6 +395,7 @@ async def _run_chat_turn(
                     peer_memory_context=peer_memory_context,
                     briefing_context=briefing_context,
                     page_context_block=page_context_block,
+                    language_block=language_block,
                 ).__aiter__()
 
             # Whole-turn deadline, not per-chunk: a stream that drips bytes
@@ -571,6 +603,7 @@ async def chat_stream(body: ChatRequest, request: Request) -> StreamingResponse:
         attachment_blocks=None,
         request=request,
         page_context=body.page_context,
+        language=body.language,
     )
 
 
@@ -580,6 +613,7 @@ async def chat_upload(
     message: str = Form(..., min_length=1, max_length=32000),
     session_id: str | None = Form(None),
     committee_review: bool = Form(False),
+    language: str | None = Form(None),
     files: list[UploadFile] = File(...),  # noqa: B008 — FastAPI multipart marker, mirrors the pattern for File parameters
 ) -> StreamingResponse:
     """Streaming chat turn with file/photo attachments.
@@ -639,6 +673,7 @@ async def chat_upload(
         committee_review=committee_review,
         attachment_blocks=image_blocks or None,
         request=request,
+        language=language,
     )
 
 

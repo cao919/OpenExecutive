@@ -10,6 +10,7 @@ import {
 } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useT } from "@/i18n";
 import {
   WorkflowMeta,
   WorkflowRunSummary,
@@ -621,13 +622,14 @@ function StatusSegment({
 }
 
 export default function JobsPage() {
+  const t = useT();
   return (
     <div className="flex flex-col h-full bg-surface text-fg">
       <main className="flex-1 overflow-y-auto px-6 py-8">
         <div className="max-w-5xl mx-auto">
           <div className="mb-6">
             <h1 className="text-2xl font-semibold text-fg mb-1">
-              Executive Jobs
+              {t("pages.jobs.title")}
             </h1>
             <p className="text-sm text-fg-muted">
               Structured executive workflows that produce a deliverable — not a

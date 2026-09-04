@@ -12,6 +12,7 @@ import {
   type WatchlistSeverity,
   type WatchlistSignalType,
 } from "@/lib/api";
+import { useT } from "@/i18n";
 
 const CADENCES: WatchlistCadence[] = ["real_time", "15min", "hourly", "daily", "weekly"];
 const SEVERITIES: WatchlistSeverity[] = ["low", "medium", "high", "urgent"];
@@ -359,6 +360,7 @@ function AddWatchModal({ onCreated, onClose }: AddModalProps) {
 }
 
 export default function WatchlistPage() {
+  const t = useT();
   const [items, setItems] = useState<WatchlistItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -446,7 +448,7 @@ export default function WatchlistPage() {
         <div className="max-w-5xl mx-auto px-6 py-6">
           <div className="flex items-baseline justify-between mb-6">
             <div>
-              <h1 className="text-xl font-semibold text-fg">Watch list</h1>
+              <h1 className="text-xl font-semibold text-fg">{t("pages.watchlist.title")}</h1>
               <p className="text-sm text-fg-muted mt-0.5">
                 External conditions the Executive is monitoring. Signals that survive
                 severity + triage become proposals in your briefing.

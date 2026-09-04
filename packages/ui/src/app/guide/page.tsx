@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 import DynamicSection from '@/components/architecture/DynamicSection';
+import { useT } from '@/i18n';
 
 // The section nav is hardcoded so the sidebar renders instantly without
 // waiting for the backend. IDs must match the GUIDE_SECTIONS registry in
@@ -39,6 +40,7 @@ interface SectionMeta {
 }
 
 export default function GuidePage() {
+  const t = useT();
   const [activeSection, setActiveSection] = useState('chat');
   const [sectionMeta, setSectionMeta] = useState<Record<string, SectionMeta>>({});
   const observerRef = useRef<IntersectionObserver | null>(null);
@@ -124,7 +126,7 @@ export default function GuidePage() {
       <main className="flex-1 overflow-y-auto">
         <div className="max-w-4xl mx-auto px-8 py-10 space-y-20">
           <div>
-            <h1 className="text-2xl font-bold text-fg">Open Executive — User Guide</h1>
+            <h1 className="text-2xl font-bold text-fg">{t("pages.guide.title")}</h1>
             <p className="mt-2 text-sm text-fg-muted">
               A quick tour of every feature: what it is, and what it does for you. Not a manual —
               just enough to know where to go and why. For the technical internals, see the

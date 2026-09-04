@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 
+import { useT } from "@/i18n";
+
 import {
   AgentDetail,
   AgentHistoryEntry,
@@ -57,6 +59,7 @@ function draftIsDirty(d: AgentDetail | null, draft: DraftState | null): boolean 
 }
 
 export default function CouncilPage() {
+  const t = useT();
   const [agents, setAgents] = useState<AgentMeta[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [detail, setDetail] = useState<AgentDetail | null>(null);
@@ -276,7 +279,7 @@ export default function CouncilPage() {
       <main className="flex-1 overflow-y-auto">
         <div className="max-w-4xl mx-auto px-8 py-10 space-y-6">
           <div>
-            <h1 className="text-2xl font-bold text-fg">Agent Council</h1>
+            <h1 className="text-2xl font-bold text-fg">{t("pages.council.title")}</h1>
             <p className="mt-2 text-sm text-fg-muted">
               Edit each specialist&apos;s prompt, model, and behavior. Changes apply on the next
               specialist call — no restart needed. Resetting restores the built-in defaults.

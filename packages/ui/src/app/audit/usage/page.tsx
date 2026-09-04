@@ -10,6 +10,7 @@ import {
   type UsageSummary,
   type UsageTotals,
 } from "@/lib/api";
+import { useT } from "@/i18n";
 
 function fmtInt(n: number): string {
   return (n ?? 0).toLocaleString();
@@ -70,6 +71,7 @@ const COL_HEADERS = ["Calls", "Input", "Cache read", "Cache write", "Output", "C
 const DEBOUNCE_MS = 250;
 
 export default function TokenUsagePage() {
+  const t = useT();
   const [data, setData] = useState<UsageSummary | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -118,7 +120,7 @@ export default function TokenUsagePage() {
       <main className="flex-1 overflow-y-auto">
         <div className="max-w-6xl mx-auto px-6 py-6">
           <div className="flex items-center justify-between gap-4">
-            <h1 className="text-xl font-semibold text-fg">Token usage</h1>
+            <h1 className="text-xl font-semibold text-fg">{t("pages.audit/usage.title")}</h1>
             <Link
               href="/audit"
               className="text-xs text-fg-muted hover:text-fg underline-offset-2 hover:underline"

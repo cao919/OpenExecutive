@@ -9,6 +9,7 @@ import {
   type DepartmentCreate,
   type DepartmentState,
 } from "@/lib/api";
+import { useT } from "@/i18n";
 
 const AUTHORITY_LABELS: Record<string, string> = {
   auto_execute: "Auto",
@@ -112,6 +113,7 @@ function AddDepartmentModal({ onCreated, onCancel }: AddDepartmentModalProps) {
 }
 
 export default function DepartmentsPage() {
+  const t = useT();
   const [depts, setDepts] = useState<DepartmentState[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -129,7 +131,7 @@ export default function DepartmentsPage() {
       <main className="flex-1 overflow-y-auto">
         <div className="max-w-5xl mx-auto px-6 py-6">
           <div className="flex items-center justify-between mb-1">
-            <h1 className="text-xl font-semibold text-fg">Departments</h1>
+            <h1 className="text-xl font-semibold text-fg">{t("pages.departments.title")}</h1>
             <button
               onClick={() => setAddingDept(true)}
               className="px-3 py-1.5 text-xs rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30"

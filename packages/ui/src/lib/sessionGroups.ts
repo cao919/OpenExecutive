@@ -3,17 +3,20 @@ import type { SessionSummary } from "@/lib/api";
 export type GroupKey = "today" | "yesterday" | "prev7" | "prev30" | "older";
 
 export interface SessionGroup {
+  /** Stable bucket id; consumers map it to a localized label via the
+   *  i18n dictionary (key `groupSessions.${key}`). Keeping the label
+   *  out of the data layer means switching languages doesn't require
+   *  re-bucketing or re-fetching anything. */
   key: GroupKey;
-  label: string;
   items: SessionSummary[];
 }
 
-const GROUP_ORDER: { key: GroupKey; label: string }[] = [
-  { key: "today", label: "Today" },
-  { key: "yesterday", label: "Yesterday" },
-  { key: "prev7", label: "Previous 7 Days" },
-  { key: "prev30", label: "Previous 30 Days" },
-  { key: "older", label: "Older" },
+const GROUP_ORDER: { key: GroupKey }[] = [
+  { key: "today" },
+  { key: "yesterday" },
+  { key: "prev7" },
+  { key: "prev30" },
+  { key: "older" },
 ];
 
 const DAY_MS = 86_400_000;
@@ -65,9 +68,8 @@ export function groupSessionsByDate(
     buckets[key].push(s);
   }
 
-  return GROUP_ORDER.map(({ key, label }) => ({
+  return GROUP_ORDER.map(({ key }) => ({
     key,
-    label,
     items: buckets[key],
   })).filter((g) => g.items.length > 0);
 }

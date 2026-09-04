@@ -11,6 +11,7 @@ import {
   listOnboardingTemplates,
 } from "@/lib/api";
 import { PHASE_LABEL, STATUS_META, STATUS_ORDER } from "@/components/onboarding/meta";
+import { useT } from "@/i18n";
 
 function ProgressBar({ pct }: { pct: number }) {
   return (
@@ -24,6 +25,7 @@ function ProgressBar({ pct }: { pct: number }) {
 }
 
 export default function StaffOnboardingPage() {
+  const t = useT();
   const [plans, setPlans] = useState<OnboardingPlan[]>([]);
   const [templates, setTemplates] = useState<OnboardingTemplate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -92,7 +94,7 @@ export default function StaffOnboardingPage() {
         <div className="max-w-5xl mx-auto px-6 py-6">
           <div className="flex items-baseline justify-between mb-6 gap-4 flex-wrap">
             <div>
-              <h1 className="text-xl font-semibold text-fg">Staff Onboarding</h1>
+              <h1 className="text-xl font-semibold text-fg">{t("pages.staff-onboarding.title")}</h1>
               <p className="text-sm text-fg-muted mt-0.5">
                 Onboarding plans for new hires — progress, tasks, and the generated
                 welcome brief.

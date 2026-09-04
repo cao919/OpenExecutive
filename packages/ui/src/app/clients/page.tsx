@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 
 import Icon from "@/components/Icon";
+import { useT } from "@/i18n";
 import {
   activateClient,
   type ClientCockpitCard,
@@ -37,6 +38,7 @@ function encodePrefill(payload: Record<string, string>): string {
 }
 
 export default function ClientsPage() {
+  const t = useT();
   const [status, setStatus] = useState<ClientsStatus>({
     active: null,
     fixture_active: null,
@@ -237,7 +239,7 @@ export default function ClientsPage() {
   return (
     <main className="flex-1 min-h-0 overflow-y-auto">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
-        <h1 className="text-xl font-semibold text-fg">Client companies</h1>
+        <h1 className="text-xl font-semibold text-fg">{t("pages.clients.title")}</h1>
         <p className="mt-1 text-sm text-fg-muted">
           Run several client companies from one Open Executive — one active at a
           time. Switching saves the current client&apos;s full state (chat,

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 
 import { useAskOEFormContext } from "@/components/askoe/AskOEContext";
+import { useT } from "@/i18n";
 import { createPerson, listPeople, type PageFormField, type Person } from "@/lib/api";
 
 // ---------------------------------------------------------------------------
@@ -464,6 +465,7 @@ function AddPersonModal({ onCreated, onClose }: AddPersonModalProps) {
 // ---------------------------------------------------------------------------
 
 export default function PeoplePage() {
+  const t = useT();
   const [people, setPeople] = useState<Person[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -494,7 +496,7 @@ export default function PeoplePage() {
         <div className="max-w-5xl mx-auto px-6 py-6">
           <div className="flex items-baseline justify-between mb-6">
             <div>
-              <h1 className="text-xl font-semibold text-fg">People</h1>
+              <h1 className="text-xl font-semibold text-fg">{t("pages.people.title")}</h1>
               <p className="text-sm text-fg-muted mt-0.5">
                 Humans the Executive coordinates with. Authority scopes determine who approves what.
               </p>
