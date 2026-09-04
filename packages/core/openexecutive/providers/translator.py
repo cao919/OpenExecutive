@@ -495,6 +495,12 @@ def from_openai_response(body: dict[str, Any]) -> SimpleNamespace:
     content_blocks: list[SimpleNamespace] = []
 
     text = msg.get("content")
+    if not (isinstance(text, str) and text):
+        # Reasoning models (e.g. GLM-4.7-Flash) emit the answer in
+        # ``reasoning_content`` and can leave ``content`` empty when
+        # ``max_tokens`` is consumed by the reasoning phase. Fall back so
+        # non-streaming calls still surface a usable reply.
+        text = msg.get("reasoning_content")
     if isinstance(text, str) and text:
         content_blocks.append(_block("text", text=_strip_cite_markup(text)))
 
@@ -589,6 +595,10 @@ class StreamAccumulator:
         # Indices ≥1 = tool_use blocks keyed by OpenAI tool_call.index.
         self._text_started = False
         self._text_buf: list[str] = []
+        # Reasoning-model tokens (``delta.reasoning_content``) accumulated so a
+        # stream that never emits ``delta.content`` (GLM-4.7-Flash with
+        # max_tokens eaten by reasoning) can still be surfaced as the reply.
+        self._reasoning_buf: list[str] = []
         # Withheld trailing fragment that might be the start of a <cite> tag
         # split across SSE chunks; flushed (stripped) at finish_reason.
         self._cite_pending = ""
@@ -645,6 +655,10 @@ class StreamAccumulator:
                     )
                 )
 
+        reasoning = delta.get("reasoning_content")
+        if isinstance(reasoning, str) and reasoning:
+            self._reasoning_buf.append(reasoning)
+
         for tc in delta.get("tool_calls") or []:
             idx = tc.get("index", 0)
             slot = self._tool_calls.setdefault(
@@ -661,6 +675,30 @@ class StreamAccumulator:
 
         if choice.get("finish_reason"):
             self._finish_reason = choice["finish_reason"]
+            # Reasoning-model fallback: if no ``delta.content`` ever arrived but
+            # the stream carried ``delta.reasoning_content`` (GLM-4.7-Flash whose
+            # max_tokens were consumed by the reasoning phase), surface the
+            # reasoning text as the visible reply instead of returning empty.
+            if not self._text_started and self._reasoning_buf:
+                self._text_started = True
+                reasoning_text = "".join(self._reasoning_buf)
+                self._text_buf.append(reasoning_text)
+                events.append(
+                    _block(
+                        "content_block_start",
+                        index=0,
+                        content_block=_block("text", text=""),
+                    )
+                )
+                emit = _strip_cite_markup(reasoning_text)
+                if emit:
+                    events.append(
+                        _block(
+                            "content_block_delta",
+                            index=0,
+                            delta=_block("text_delta", text=emit),
+                        )
+                    )
             # Flush any withheld cite fragment. ``_strip_cite_markup`` drops a
             # still-unterminated ``<cite…`` left by a mid-tag truncation, so a
             # partial tag is never emitted; a non-cite remainder is preserved.

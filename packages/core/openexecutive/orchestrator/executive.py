@@ -1145,6 +1145,11 @@ class Executive:
                 [*SPECIALIST_TOOLS, *_ALL_SKILL_TOOLS, *self._mcp_tools],
                 key=lambda t: t["name"],
             )
+            if self._settings.local_models_enabled and self._settings.local_minimal_tools:
+                # Small local models can't chew through the full ~58-tool prompt
+                # in reasonable time (a ~21k-token payload). Keep only the core
+                # consult_specialist tool so local chat stays responsive.
+                client_tools = sorted(SPECIALIST_TOOLS, key=lambda t: t["name"])
             tools_with_cache: list[dict[str, Any]] = [
                 *client_tools[:-1],
                 {**client_tools[-1], "cache_control": {"type": "ephemeral", "ttl": "1h"}},

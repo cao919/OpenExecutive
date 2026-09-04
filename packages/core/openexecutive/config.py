@@ -154,6 +154,13 @@ class Settings(BaseSettings):
     # Local generation (especially CPU inference) can be far slower than a
     # hosted API. Default generous so a slow first token doesn't time out.
     local_timeout_s: float = Field(300.0, alias="LOCAL_TIMEOUT_S")
+    # When local models are enabled, restrict the Executive's tool surface to
+    # only the core `consult_specialist` tool (dropping the ~57 skill tools).
+    # Small local models cannot process the full ~21k-token tool prompt in
+    # reasonable time; enabling this keeps local chat responsive at the cost
+    # of disabling the skill/tool integrations (alerts, scheduling, artifacts,
+    # workflows, etc.). Default OFF to preserve full behavior.
+    local_minimal_tools: bool = Field(False, alias="LOCAL_MINIMAL_TOOLS")
 
     @field_validator("local_models", mode="before")
     @classmethod
