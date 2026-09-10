@@ -3,6 +3,7 @@
 import Link from "next/link";
 
 import Icon from "@/components/Icon";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { ADVANCED_ITEMS } from "@/components/shell/navConfig";
 import { useT } from "@/i18n";
 
@@ -19,7 +20,39 @@ export default function SettingsPage() {
           {t("pages.settings.subtitle")}
         </p>
 
-        <div className="mt-6 grid gap-3 sm:grid-cols-2">
+        {/* Language — the "global" switcher the user asked for. Pinned
+            at the top above the advanced tools grid so it's the first
+            thing you see on this page; the same control is also one click
+            away from any page via the TopBar pill. */}
+        <section
+          aria-labelledby="settings-language-heading"
+          className="mt-6 rounded-xl border border-line bg-surface-elevated p-4"
+        >
+          <div className="flex items-start gap-3">
+            <span className="mt-0.5 text-fg-muted">
+              <Icon name="globe" size="w-5 h-5" />
+            </span>
+            <div className="flex-1 min-w-0">
+              <h2
+                id="settings-language-heading"
+                className="text-sm font-medium text-fg"
+              >
+                {t("language.title")}
+              </h2>
+              <p className="mt-1 text-xs text-fg-muted leading-relaxed">
+                {t("language.description")}
+              </p>
+              <div className="mt-3">
+                <LanguageSwitcher variant="segmented" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <h2 className="mt-8 mb-3 text-xs font-semibold uppercase tracking-widest text-fg-subtle">
+          {t("pages.settings.sectionAdvanced")}
+        </h2>
+        <div className="grid gap-3 sm:grid-cols-2">
           {ADVANCED_ITEMS.map((item) => (
             <Link
               key={item.href}
@@ -30,7 +63,7 @@ export default function SettingsPage() {
                 <span className="text-fg-muted group-hover:text-fg transition-colors">
                   <Icon name={item.icon} size="w-5 h-5" />
                 </span>
-                <h2 className="text-sm font-medium text-fg">{t(item.labelKey)}</h2>
+                <h3 className="text-sm font-medium text-fg">{t(item.labelKey)}</h3>
               </div>
               <p className="mt-2 text-xs text-fg-muted leading-relaxed">
                 {t(item.descriptionKey)}

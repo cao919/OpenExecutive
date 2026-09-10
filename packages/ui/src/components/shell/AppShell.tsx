@@ -8,6 +8,7 @@ import { AskOEProvider, useAskOE } from "@/components/askoe/AskOEContext";
 import AskOEPanel from "@/components/askoe/AskOEPanel";
 import BrandMark from "@/components/BrandMark";
 import Icon, { IconName } from "@/components/Icon";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import UserBadge from "@/components/UserBadge";
 import { useT } from "@/i18n";
 import {
@@ -363,7 +364,8 @@ function TopBar({
           )}
         </nav>
       </div>
-      <div className="flex items-center gap-3 flex-shrink-0">
+      <div className="flex items-center gap-1 flex-shrink-0">
+        <LanguageSwitcher variant="pill" />
         <AskOEButton />
       </div>
     </header>

@@ -48,6 +48,19 @@ OPENROUTER_MODELS: list[str] = [
 ]
 
 
+# ZhipuAI (智谱) GLM models reachable through the PaaS endpoint. The slugs
+# are the canonical names ZhipuAI publishes (no prefix) and are sent to
+# the server verbatim — so changing one here without a matching server
+# slug will 404. The default curated set lives in
+# ``Settings.zhipuai_models``; this constant is the fallback used when
+# ZHIPUAI_MODELS is unset in the env.
+DEFAULT_ZHIPUAI_MODELS: list[str] = [
+    "glm-4-flash",
+    "glm-4-air",
+    "glm-4-plus",
+]
+
+
 # Per-Claude OpenRouter slug. The Anthropic-direct name is the registry
 # key; the value is what we send when OPENROUTER_ENABLED is on.
 _CLAUDE_OPENROUTER_SLUGS: dict[str, str] = {
@@ -86,6 +99,20 @@ def _local_models(settings: Any) -> list[str]:
     return list(getattr(settings, "local_models", []) or [])
 
 
+def _zhipuai_models(settings: Any) -> list[str]:
+    """Configured ZhipuAI model slugs, or ``[]`` when ZhipuAI routing is off.
+
+    Defensive read: if the operator cleared ``ZHIPUAI_MODELS`` in the env
+    we fall back to the curated default rather than surfacing an empty
+    dropdown — ZhipuAI is the one backend where the user almost certainly
+    wants the published free/paid tiers rather than a custom list.
+    """
+    if not getattr(settings, "zhipuai_enabled", False):
+        return []
+    configured = list(getattr(settings, "zhipuai_models", []) or [])
+    return configured or DEFAULT_ZHIPUAI_MODELS
+
+
 def allowed_models() -> list[str]:
     """Flat allowlist the Council UI's dropdown reads.
 
@@ -96,6 +123,7 @@ def allowed_models() -> list[str]:
       ``OPENROUTER_ENABLED`` is on (Claude is then reachable via OpenRouter).
     * OpenRouter set — when ``OPENROUTER_ENABLED`` is on.
     * Local models — when ``LOCAL_MODELS_ENABLED`` is on.
+    * ZhipuAI models — when ``ZHIPUAI_ENABLED`` is on.
     """
     settings = get_settings()
     models: list[str] = []
@@ -104,6 +132,7 @@ def allowed_models() -> list[str]:
     if settings.openrouter_enabled:
         models.extend(OPENROUTER_MODELS)
     models.extend(_local_models(settings))
+    models.extend(_zhipuai_models(settings))
     return models
 
 
@@ -128,6 +157,7 @@ def _is_claude(model: str) -> bool:
 _anthropic_provider: AnthropicProvider | None = None
 _openrouter_provider: OpenRouterProvider | None = None
 _local_provider: OpenAICompatibleProvider | None = None
+_zhipuai_provider: OpenAICompatibleProvider | None = None
 
 
 def _anthropic() -> AnthropicProvider:
@@ -211,6 +241,34 @@ def _openrouter() -> OpenRouterProvider:
     return _openrouter_provider
 
 
+def _zhipuai() -> OpenAICompatibleProvider:
+    global _zhipuai_provider
+    if _zhipuai_provider is None:
+        settings = get_settings()
+        if not settings.zhipuai_api_key:
+            # _validate_zhipuai already enforces this at startup; defense
+            # in depth in case a request lands between the toggle and the
+            # validator running (e.g. in tests that bypass Settings).
+            raise HTTPException(
+                status_code=400,
+                detail="ZhipuAI routing requires ZHIPUAI_API_KEY",
+            )
+        # ZhipuAI is OpenAI-compatible but exposes none of the Anthropic
+        # server tools (cache_control, thinking, web_search). Use the same
+        # non-Claude spec as local + OpenRouter-byok so call sites
+        # silently strip those kwargs before they hit the wire.
+        spec_lookup: dict[str, FeatureSpec] = {
+            m: _DEFAULT_NON_CLAUDE_SPEC for m in _zhipuai_models(settings)
+        }
+        _zhipuai_provider = OpenAICompatibleProvider(
+            base_url=settings.zhipuai_base_url,
+            api_key=settings.zhipuai_api_key,
+            timeout_s=settings.zhipuai_timeout_s,
+            spec_lookup=spec_lookup,
+        )
+    return _zhipuai_provider
+
+
 def get_provider(model: str) -> LLMProvider:
     """Return the provider that should serve calls for ``model``.
 
@@ -221,6 +279,9 @@ def get_provider(model: str) -> LLMProvider:
     * Local models (slugs listed in ``LOCAL_MODELS`` with
       ``LOCAL_MODELS_ENABLED`` on) — the self-hosted OpenAI-compatible
       backend at ``LOCAL_BASE_URL``.
+    * ZhipuAI models (slugs listed in ``ZHIPUAI_MODELS`` with
+      ``ZHIPUAI_ENABLED`` on) — the PaaS endpoint at
+      ``ZHIPUAI_BASE_URL`` (defaults to the bigmodel.cn PaaS).
     * Other non-Claude (anything in ``OPENROUTER_MODELS``, or any unknown
       slug) — OpenRouter only. Raises HTTP 400 when ``OPENROUTER_ENABLED``
       is off, since we have no other backend that speaks those models.
@@ -234,6 +295,11 @@ def get_provider(model: str) -> LLMProvider:
     # endpoint can serve them with no external dependency.
     if model in _local_models(settings):
         return _local()
+    # ZhipuAI models next — same OpenAI-compatible shape, but a
+    # dedicated backend so we never leak a ZhipuAI request to
+    # OpenRouter (or vice versa) by accident.
+    if model in _zhipuai_models(settings):
+        return _zhipuai()
     # Other non-Claude slugs require OpenRouter to be enabled.
     if not settings.openrouter_enabled:
         raise HTTPException(
@@ -242,7 +308,9 @@ def get_provider(model: str) -> LLMProvider:
                 f"Model {model!r} requires OPENROUTER_ENABLED=true (set "
                 f"OPENROUTER_API_KEY and toggle the flag), or list it in "
                 f"LOCAL_MODELS with LOCAL_MODELS_ENABLED=true to serve it "
-                f"from a local OpenAI-compatible backend."
+                f"from a local OpenAI-compatible backend, or list it in "
+                f"ZHIPUAI_MODELS with ZHIPUAI_ENABLED=true to serve it "
+                f"from the ZhipuAI PaaS."
             ),
         )
     return _openrouter()
@@ -250,7 +318,8 @@ def get_provider(model: str) -> LLMProvider:
 
 def _reset_for_tests() -> None:
     """Drop cached provider singletons. Test-only — pytest fixtures call this."""
-    global _anthropic_provider, _openrouter_provider, _local_provider
+    global _anthropic_provider, _openrouter_provider, _local_provider, _zhipuai_provider
     _anthropic_provider = None
     _openrouter_provider = None
     _local_provider = None
+    _zhipuai_provider = None

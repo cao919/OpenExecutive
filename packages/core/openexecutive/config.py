@@ -180,6 +180,60 @@ class Settings(BaseSettings):
             )
         return self
 
+    # ---- ZhipuAI (智谱) --------------------------------------------------
+    # ZhipuAI's GLM family is served at an OpenAI-compatible chat endpoint
+    # (https://open.bigmodel.cn/api/paas/v4/chat/completions), so the existing
+    # OpenAICompatibleProvider handles it as-is — only the base URL and the
+    # curated model slug list are different. ``glm-4-flash`` is the free /
+    # fast default; ``glm-4-plus`` is the strongest paid tier. Off by default
+    # so a fresh checkout's behavior is identical to before.
+    #
+    # To run entirely on ZhipuAI (no Anthropic key, no local server):
+    #   ZHIPUAI_ENABLED=true
+    #   ZHIPUAI_API_KEY=...
+    #   ZHIPUAI_MODELS=glm-4-flash,glm-4-air
+    #   DEFAULT_MODEL=glm-4-flash
+    #   DEEP_REASONING_MODEL=glm-4-plus
+    #   ROUTING_MODEL=glm-4-flash
+    zhipuai_enabled: bool = Field(False, alias="ZHIPUAI_ENABLED")
+    zhipuai_api_key: str | None = Field(None, alias="ZHIPUAI_API_KEY")
+    # The PaaS endpoint. Include the `/api/paas/v4` prefix — the provider
+    # appends `/chat/completions`, so the final URL is
+    # `https://open.bigmodel.cn/api/paas/v4/chat/completions`, which is the
+    # documented PaaS chat route.
+    zhipuai_base_url: str = Field(
+        "https://open.bigmodel.cn/api/paas/v4", alias="ZHIPUAI_BASE_URL"
+    )
+    # Comma-separated model slugs to surface in the Council UI and route to
+    # the ZhipuAI backend. Free tiers like ``glm-4-flash`` are rate-limited
+    # by ZhipuAI; ``glm-4-air`` / ``glm-4-plus`` are paid. The slugs are
+    # sent to the server verbatim, so they must match the names it serves.
+    zhipuai_models: Annotated[list[str], NoDecode] = Field(
+        default_factory=lambda: ["glm-4-flash", "glm-4-air", "glm-4-plus"],
+        alias="ZHIPUAI_MODELS",
+    )
+    # Per-call wall-clock cap. ``glm-4-flash`` typically returns in well
+    # under a second, but ``glm-4-plus`` (and a 16k-context prompt) can
+    # take 30-60s — generous default to avoid spurious timeouts.
+    zhipuai_timeout_s: float = Field(60.0, alias="ZHIPUAI_TIMEOUT_S")
+
+    @field_validator("zhipuai_models", mode="before")
+    @classmethod
+    def _parse_zhipuai_models(cls, v: Any) -> list[str]:
+        if isinstance(v, list):
+            return [str(x).strip() for x in v if str(x).strip()]
+        if isinstance(v, str) and v.strip():
+            return [x.strip() for x in v.split(",") if x.strip()]
+        return []
+
+    @model_validator(mode="after")
+    def _validate_zhipuai(self) -> "Settings":
+        if self.zhipuai_enabled and not self.zhipuai_api_key:
+            raise ValueError(
+                "ZHIPUAI_ENABLED=true requires ZHIPUAI_API_KEY to be set"
+            )
+        return self
+
     @model_validator(mode="after")
     def _validate_provider_available(self) -> "Settings":
         # At least one backend must be reachable, or every model call fails.
@@ -187,11 +241,13 @@ class Settings(BaseSettings):
             self.anthropic_api_key
             or self.openrouter_enabled
             or self.local_models_enabled
+            or self.zhipuai_enabled
         ):
             raise ValueError(
                 "No LLM provider configured. Set ANTHROPIC_API_KEY, or enable "
                 "OpenRouter (OPENROUTER_ENABLED=true + OPENROUTER_API_KEY), or "
-                "enable local models (LOCAL_MODELS_ENABLED=true + LOCAL_BASE_URL)."
+                "enable local models (LOCAL_MODELS_ENABLED=true + LOCAL_BASE_URL), "
+                "or enable ZhipuAI (ZHIPUAI_ENABLED=true + ZHIPUAI_API_KEY)."
             )
         return self
 
