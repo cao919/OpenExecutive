@@ -11,6 +11,29 @@ Open Executive 的所有 LLM 调用都走同一个 `get_provider(model)` 抽象�
 
 ---
 
+## ⚡ TL;DR：最常见的切换——怎么切回本地 LM Studio
+
+> 适用：本地 LM Studio 已经启动（默认 `http://127.0.0.1:1234`），里面加载了一个模型，你想把它接进来。
+
+**四步完成，不用重启**：
+
+1. 打开 **设置 → AI 提供商**
+2. 点 **+ 添加提供商**，填这四个字段：
+
+   | 字段 | 值 |
+   |---|---|
+   | 名称（Name） | `LM Studio Local` |
+   | 接口地址（Base URL） | `http://127.0.0.1:1234/v1` |
+   | API Key | `sk-lm-duPznAMl:sqE4Jt9mrENVCu7iI3K7`（或 `not-required`） |
+   | 模型列表（Models） | `zai-org/glm-4.7-flash`（一行一个；**避开纯 reasoning/thinking 模型**，否则 chat 会返回空） |
+
+3. 点 **保存** → 卡片右上角点 **测试**，看到 `200 · 200ms · N 个上游模型` 即连得通。
+4. 打开 **Council → Executive**，把「模型」下拉切到 `zai-org/glm-4.7-flash`（或你填的其它 slug）→ 立即生效。
+
+> 想切回远程？同样在 Council 把模型选回 `glm-4-flash`（智谱）即可，不用动 provider 卡片。
+
+---
+
 ## 通用步骤：添加一个自定义 provider
 
 1. 打开 **设置 → AI 提供商**（页面顶部附近，紧跟在「界面语言」卡片后面）。
