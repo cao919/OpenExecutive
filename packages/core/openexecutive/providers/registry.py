@@ -6,6 +6,12 @@ Anthropic-only features each model tolerates. ``get_provider(model)``
 picks the backend per call so the user can flip an agent's model in the
 Council UI and have requests for that agent — and only that agent —
 route differently.
+
+User-added remote providers (anything an operator adds through the
+Settings page) live in ``provider_store`` — a tiny SQLite table that
+survives restarts. Every distinct ``base_url`` they configure gets one
+lazily-built ``OpenAICompatibleProvider`` instance, reused across calls
+of model slugs served by it.
 """
 from __future__ import annotations
 
@@ -19,6 +25,11 @@ from openexecutive.providers.feature_gate import FeatureSpec
 from openexecutive.providers.openai_compatible import OpenAICompatibleProvider
 from openexecutive.providers.openrouter_provider import OpenRouterProvider
 from openexecutive.providers.provider import LLMProvider
+from openexecutive.providers.provider_store import (
+    get_provider_for_model,
+    invalidate_on_write as invalidate_provider_store,
+    list_providers as list_custom_providers,
+)
 
 # Anthropic-direct slugs — used as canonical model names everywhere in
 # the codebase (config defaults, agent class defaults, override DB).
@@ -124,6 +135,9 @@ def allowed_models() -> list[str]:
     * OpenRouter set — when ``OPENROUTER_ENABLED`` is on.
     * Local models — when ``LOCAL_MODELS_ENABLED`` is on.
     * ZhipuAI models — when ``ZHIPUAI_ENABLED`` is on.
+    * User-added custom providers — every model in any enabled
+      ``custom_providers`` row is included so a Settings-page "Save"
+      shows up in the dropdown without restarting the backend.
     """
     settings = get_settings()
     models: list[str] = []
@@ -133,7 +147,14 @@ def allowed_models() -> list[str]:
         models.extend(OPENROUTER_MODELS)
     models.extend(_local_models(settings))
     models.extend(_zhipuai_models(settings))
-    return models
+    for custom in list_custom_providers():
+        if custom["enabled"]:
+            models.extend(custom["models"])
+    # The same slug can land in both built-ins and a custom row (e.g.
+    # ``glm-4-flash`` lives in both ZHIPUAI_MODELS and a user-added
+    # ZhipuAI custom provider). Dedupe while preserving order so the
+    # Council UI dropdown stays stable.
+    return list(dict.fromkeys(models))
 
 
 def allowed_models_for(agent_id: str | None) -> list[str]:
@@ -158,6 +179,11 @@ _anthropic_provider: AnthropicProvider | None = None
 _openrouter_provider: OpenRouterProvider | None = None
 _local_provider: OpenAICompatibleProvider | None = None
 _zhipuai_provider: OpenAICompatibleProvider | None = None
+# Custom provider singletons keyed by provider_id so two providers that
+# happen to share a base URL don't collapse (one might be enabled with
+# a key, the other disabled without — they'd have different auth headers
+# at the wire level).
+_custom_providers: dict[int, OpenAICompatibleProvider] = {}
 
 
 def _anthropic() -> AnthropicProvider:
@@ -269,6 +295,39 @@ def _zhipuai() -> OpenAICompatibleProvider:
     return _zhipuai_provider
 
 
+def _custom(row: dict[str, Any]) -> OpenAICompatibleProvider:
+    """Build (or return cached) an OpenAI-compatible provider for a user-added entry.
+
+    Custom providers are remote OpenAI-compatible endpoints (ZhipuAI,
+    DeepSeek, Moonshot, anything that speaks ``/v1/chat/completions``).
+    They share the same translation pipeline as the local/OAI-compatible
+    providers but pick up base_url + key from a SQLite row that the
+    Settings page edits at runtime.
+
+    Note: caching is keyed on provider_id, not on the (base_url, api_key)
+    tuple, so a user editing the URL or key creates a different
+    singleton. Dropping the id-keyed entry on store-invalidation is the
+    job of the admin route's ``invalidate_provider_store``-coupled
+    reset hook below.
+    """
+    provider_id = row["id"]
+    cached = _custom_providers.get(provider_id)
+    if cached is not None:
+        return cached
+    spec_lookup: dict[str, FeatureSpec] = {
+        m: _DEFAULT_NON_CLAUDE_SPEC for m in row["models"]
+    }
+    provider = OpenAICompatibleProvider(
+        base_url=row["base_url"],
+        api_key=row["api_key"],
+        timeout_s=120.0,  # Remote callouts get a generous default;
+        # per-provider overrides can come later when a use-case warrants it.
+        spec_lookup=spec_lookup,
+    )
+    _custom_providers[provider_id] = provider
+    return provider
+
+
 def get_provider(model: str) -> LLMProvider:
     """Return the provider that should serve calls for ``model``.
 
@@ -282,6 +341,8 @@ def get_provider(model: str) -> LLMProvider:
     * ZhipuAI models (slugs listed in ``ZHIPUAI_MODELS`` with
       ``ZHIPUAI_ENABLED`` on) — the PaaS endpoint at
       ``ZHIPUAI_BASE_URL`` (defaults to the bigmodel.cn PaaS).
+    * User-added custom providers — any slug in an enabled
+      ``custom_providers`` row routes to that row's ``base_url``.
     * Other non-Claude (anything in ``OPENROUTER_MODELS``, or any unknown
       slug) — OpenRouter only. Raises HTTP 400 when ``OPENROUTER_ENABLED``
       is off, since we have no other backend that speaks those models.
@@ -300,6 +361,12 @@ def get_provider(model: str) -> LLMProvider:
     # OpenRouter (or vice versa) by accident.
     if model in _zhipuai_models(settings):
         return _zhipuai()
+    # User-added custom providers. Checked before the OpenRouter
+    # fallback so a custom row's slug routes to its own endpoint
+    # rather than to whatever OpenRouter happens to be enabled.
+    custom_row = get_provider_for_model(model)
+    if custom_row is not None:
+        return _custom(custom_row)
     # Other non-Claude slugs require OpenRouter to be enabled.
     if not settings.openrouter_enabled:
         raise HTTPException(
@@ -310,7 +377,8 @@ def get_provider(model: str) -> LLMProvider:
                 f"LOCAL_MODELS with LOCAL_MODELS_ENABLED=true to serve it "
                 f"from a local OpenAI-compatible backend, or list it in "
                 f"ZHIPUAI_MODELS with ZHIPUAI_ENABLED=true to serve it "
-                f"from the ZhipuAI PaaS."
+                f"from the ZhipuAI PaaS, or add a custom provider "
+                f"through the Settings page."
             ),
         )
     return _openrouter()
@@ -323,3 +391,20 @@ def _reset_for_tests() -> None:
     _openrouter_provider = None
     _local_provider = None
     _zhipuai_provider = None
+    _custom_providers.clear()
+
+
+def drop_custom_provider_singleton(provider_id: int) -> None:
+    """Invalidate a single custom provider's cached HTTP client.
+
+    Called by ``/admin/providers`` after an update or delete so a URL or
+    key change takes effect on the next call instead of sticking to the
+    stale singleton. Use ``drop_all_custom_provider_singletons`` after
+    a delete when the id may already be gone.
+    """
+    _custom_providers.pop(provider_id, None)
+
+
+def drop_all_custom_provider_singletons() -> None:
+    """Wipe the whole cache. Used after deletes for safety."""
+    _custom_providers.clear()

@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import Icon from "@/components/Icon";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { ProvidersSection } from "@/components/ProvidersSection";
 import { ADVANCED_ITEMS } from "@/components/shell/navConfig";
 import { useT } from "@/i18n";
 
@@ -48,6 +49,12 @@ export default function SettingsPage() {
             </div>
           </div>
         </section>
+
+        {/* AI providers — the in-UI control panel for adding OpenAI-
+            compatible LLM endpoints without restarting the backend. */}
+        <div className="mt-4">
+          <ProvidersSection />
+        </div>
 
         <h2 className="mt-8 mb-3 text-xs font-semibold uppercase tracking-widest text-fg-subtle">
           {t("pages.settings.sectionAdvanced")}

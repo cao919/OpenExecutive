@@ -33,6 +33,12 @@ export const ICON_PATHS = {
   activity: "M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z",
   info: "M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z",
   eye: "M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178zM15 12a3 3 0 11-6 0 3 3 0 016 0z",
+  // AI provider / model card marker — square chip with rounded corners
+  // and a center dot, communicates "compute node" at small sizes.
+  cpu: "M3.75 6a2.25 2.25 0 012.25-2.25h12a2.25 2.25 0 012.25 2.25v12a2.25 2.25 0 01-2.25 2.25h-12A2.25 2.25 0 013.75 18V6zM8.25 6V4.5m7.5 1.5V4.5m-7.5 15V21m7.5-1.5V21M6 8.25h.008v.008H6V8.25zm0 3.75h.008v.008H6V12zm0 3.75h.008v.008H6v-.008zm3.75-7.5h7.5v7.5h-7.5v-7.5z",
+  // Connection / link glyph — for the "Test connection" button. Two
+  // rounded segments meeting at a chain link, reads as "wire up".
+  link: "M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244",
 } as const;
 
 export type IconName = keyof typeof ICON_PATHS;

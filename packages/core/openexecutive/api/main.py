@@ -36,6 +36,7 @@ from openexecutive.api.routes import (
     onboarding,
     people,
     personas,
+    providers_admin,
     review,
     scheduled,
     sessions,
@@ -508,6 +509,7 @@ def create_app() -> FastAPI:
     app.include_router(google_chat_router, tags=["google-chat"])
     app.include_router(telegram_router, tags=["telegram"])
     app.include_router(architecture.router, tags=["architecture"])
+    app.include_router(providers_admin.router, tags=["providers"])
     app.include_router(guide.router, tags=["guide"])
     app.include_router(health.router, tags=["health"])
 
