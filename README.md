@@ -353,6 +353,14 @@ pick a model that's strong at it (e.g. Llama 3.3 70B, Qwen2.5) — small models
 may route poorly. `LOCAL_API_KEY` is only needed if your server (vLLM, or a
 gateway) requires a bearer token; Ollama and LM Studio need none.
 
+**Switching at runtime.** Built-in provider slots (Anthropic, OpenRouter, Local,
+ZhipuAI) come from `.env` and require a backend restart to change. Any other
+OpenAI-compatible endpoint (LM Studio on a non-default port, vLLM, llama.cpp,
+DeepSeek, Moonshot, a private proxy, etc.) can be added in the UI under
+**Settings → AI 提供商** — no restart, hot-loaded into the Council dropdown.
+See [docs/providers.md](docs/providers.md) for the full walkthrough (LM Studio
+flip-flop, ZhipuAI fallback, OpenRouter setup, troubleshooting).
+
 ## Adding a New Specialist Agent
 
 1. Create `packages/core/openexecutive/agents/your_agent.py` extending `BaseAgent`

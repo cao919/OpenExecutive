@@ -53,6 +53,21 @@ export default function SettingsPage() {
         {/* AI providers — the in-UI control panel for adding OpenAI-
             compatible LLM endpoints without restarting the backend. */}
         <div className="mt-4">
+          {/* Quick pointer to the full help doc. Operators asked for
+              this after the LM Studio / ZhipuAI flip-flop — most of
+              the "how do I switch back to local" question is already
+              answered at the top of docs/providers.md. */}
+          <p className="mb-2 text-xs text-fg-subtle">
+            {t("pages.settings.providersHelp")}{" "}
+            <a
+              href="https://github.com/cao919/OpenExecutive/blob/maincode/docs/providers.md"
+              target="_blank"
+              rel="noreferrer"
+              className="text-fg-muted underline decoration-dotted underline-offset-2 hover:text-fg"
+            >
+              {t("pages.settings.providersHelpLink")}
+            </a>
+          </p>
           <ProvidersSection />
         </div>
 

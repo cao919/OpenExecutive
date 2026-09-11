@@ -402,6 +402,9 @@ export const zh = {
       sectionLanguage: "语言",
       sectionDiagnostics: "诊断",
       sectionAdvanced: "高级",
+      providersHelp:
+        "如何切换本地/远程模型、加新接口、测试连接等详见使用说明。",
+      providersHelpLink: "查看 docs/providers.md →",
     },
     council: {
       title: "代理议会",

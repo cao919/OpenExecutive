@@ -399,6 +399,9 @@ export const en = {
       sectionLanguage: "Language",
       sectionDiagnostics: "Diagnostics",
       sectionAdvanced: "Advanced",
+      providersHelp:
+        "Switching between local/remote models, adding a new endpoint, testing the connection — see the full guide.",
+      providersHelpLink: "View docs/providers.md →",
     },
     council: {
       title: "Agent Council",
