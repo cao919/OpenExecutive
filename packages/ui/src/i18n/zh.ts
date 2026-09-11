@@ -57,12 +57,14 @@ export const zh = {
     pulse: "脉搏",
     settings: "设置",
     userGuide: "用户指南",
+    help: "使用帮助",
 
     descNewChat: "开启与执行官的全新对话。",
     descBriefing: "看到今日已发生事项和需要你处理的事。",
     descPulse: "执行官的记忆与心跳——它知道什么、节奏如何。",
     descSettings: "配置、诊断与高级工具。",
     descUserGuide: "每个功能的通俗说明——是什么、能做什么。",
+    descHelp: "操作步骤手册——怎么切换模型、新对话、排查报错等。",
   },
 
   navGroup: {
@@ -141,6 +143,7 @@ export const zh = {
     watchlist: "关注列表",
     settings: "设置",
     guide: "用户指南",
+    help: "使用帮助",
     clients: "客户公司",
   },
 
@@ -438,6 +441,73 @@ export const zh = {
       title: "用户指南",
       subtitle: "每个功能的通俗说明。",
       empty: "尚无内容。",
+    },
+    help: {
+      title: "使用帮助",
+      subtitle:
+        "操作步骤手册——本页是与 /guide「用户指南」互补的内容:指南讲「是什么、能做什么」,这里讲「怎么做」。",
+      tocTitle: "目录",
+      sectionLmStudio: "⚡ 切回本地 LM Studio(本地推理)",
+      sectionLmStudioLead:
+        "适用:本地 LM Studio 已启动,里面加载了一个模型,你想把它接进来跑。",
+      sectionLmStudioStep1: "打开「设置 → AI 提供商」。",
+      sectionLmStudioStep2:
+        "点「+ 添加提供商」,填这四个字段:名称填 LM Studio Local;接口地址填 http://127.0.0.1:1234/v1;API Key 填 sk-lm-duPznAMl:sqE4Jt9mrENVCu7iI3K7(无 token 也可填 not-required);模型列表填 zai-org/glm-4.7-flash(一行一个)。",
+      sectionLmStudioStep3:
+        "点「保存」,再点该卡片右上角的「测试连接」——看到 200 · 200ms · N 个上游模型 即通。",
+      sectionLmStudioStep4:
+        "打开 Council → Executive,把模型下拉切到 zai-org/glm-4.7-flash(或你填的其它 slug),立即生效,无需重启。",
+      sectionLmStudioTip:
+        "避开纯 reasoning/thinking 模型做 chat 默认,否则 chat 会返回空。",
+      sectionZhipuai: "切回远程智谱 GLM(默认)",
+      sectionZhipuaiLead:
+        "适用:想用稳定、质量高的云端模型;默认就是远程智谱,无需任何操作。",
+      sectionZhipuaiStep1:
+        "确认 .env 里设置了 ZHIPUAI_ENABLED=true、ZHIPUAI_API_KEY=你的 key。",
+      sectionZhipuaiStep2:
+        "Council → Executive 把模型下拉切到 glm-4-flash(或 glm-4-air / glm-4-plus)。",
+      sectionZhipuaiStep3:
+        "切了即用,无需重启。如果接口挂掉,左上角会显示 502,可切回本地或 OpenRouter。",
+      sectionOpenrouter: "接 OpenRouter(一个 key 通吃多家)",
+      sectionOpenrouterLead:
+        "适用:想用 GPT-4o / Claude 3.5 / Llama 3.3 等多模型,但不想每个都注册。",
+      sectionOpenrouterStep1:
+        "在 .env 里设置 OPENROUTER_ENABLED=true、OPENROUTER_API_KEY=sk-or-...。",
+      sectionOpenrouterStep2:
+        "重启后端(Council 才会出现 OpenRouter slug)。",
+      sectionOpenrouterStep3:
+        "Council → 模型下拉选 openai/gpt-4o 或 anthropic/claude-3.5-sonnet 等。",
+      sectionLanguage: "切换中英界面",
+      sectionLanguageLead:
+        "适用:英文菜单看不懂,或要给外国同事演示。",
+      sectionLanguageStep1:
+        "TopBar 右上角语言药丸(中文/English)直接点,或进「设置 → 界面语言」切换。",
+      sectionLanguageStep2:
+        "选择持久化到 localStorage(oe_lang),下次访问自动恢复。",
+      sectionNewChat: "开启新对话",
+      sectionNewChatLead: "适用:开始一个全新话题,不要之前的上下文。",
+      sectionNewChatStep1:
+        "侧边栏顶部「+ 新对话」按钮,或访问 /?new=1。",
+      sectionNewChatStep2:
+        "历史会话保留在侧边栏下方「近期对话」,随时点回继续。",
+      sectionCouncil: "Council 调模型",
+      sectionCouncilLead:
+        "适用:想指定某个 specialist 走某个模型(比如 CSO 用 opus,Executive 用 sonnet)。",
+      sectionCouncilStep1: "进 Council 页(设置 → 高级 → 代理议会)。",
+      sectionCouncilStep2:
+        "每个 specialist 卡片有「模型」下拉,改了保存即生效,无需重启。",
+      sectionTroubleshoot: "故障排查:chat 显示「内部错误」",
+      sectionTroubleshootLead:
+        "适用:看到「An internal error occurred. Please try again.」。",
+      sectionTroubleshootStep1:
+        "查后端日志:开发模式下 backend.log,生产 fly flyctl logs -a openexec-api-dev。",
+      sectionTroubleshootStep2:
+        "最常见两种原因:① 选了未启动的本地模型(连 LM Studio 失败);② 选了纯 reasoning 模型(token 全耗在思考上,content 永远空)。",
+      sectionTroubleshootStep3:
+        "解决:① 切回 glm-4-flash 智谱;② 或启动 LM Studio;③ 或在「设置 → AI 提供商」添加/启用对应 provider。",
+      sectionDocsLink: "完整文档见 docs/providers.md →",
+      sectionOpenSettings: "打开设置 →",
+      sectionOpenCouncil: "打开 Council →",
     },
     demo: {
       title: "公司模拟器",

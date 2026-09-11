@@ -159,6 +159,15 @@ export const GUIDE_NAV_ITEM: NavItem = {
   descriptionKey: "nav.descUserGuide",
 };
 
+// Help / How-to — operation-oriented recipes. Sits next to User Guide
+// in the rail footer; pairs with it (overview vs. recipes).
+export const HELP_NAV_ITEM: NavItem = {
+  href: "/help",
+  labelKey: "nav.help",
+  icon: "help-circle",
+  descriptionKey: "nav.descHelp",
+};
+
 // Keys for the two chat-home actions that aren't NavItems (they
 // toggle modes rather than navigate). Components resolve them with
 // t("nav.newChat") / t("nav.briefing") / t("nav.descNewChat") / etc.
@@ -198,6 +207,7 @@ export const ADVANCED_ITEMS: NavItem[] = [
     icon: "info",
     descriptionKey: "nav.descUserGuide",
   },
+  HELP_NAV_ITEM,
   {
     href: "/architecture",
     labelKey: "menu.architecture",

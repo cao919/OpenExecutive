@@ -15,6 +15,7 @@ import {
   BRIEFING_KEYS,
   buildPrimaryNav,
   GUIDE_NAV_ITEM,
+  HELP_NAV_ITEM,
   MOBILE_PRIMARY,
   NEW_CHAT_KEYS,
   PULSE_NAV_ITEM,
@@ -65,6 +66,7 @@ const SEGMENT_LABEL_KEYS: Record<string, string> = {
   watchlist: "breadcrumb.watchlist",
   settings: "breadcrumb.settings",
   guide: "breadcrumb.guide",
+  help: "breadcrumb.help",
   clients: "breadcrumb.clients",
 };
 
@@ -236,9 +238,11 @@ function Rail({
         ))}
       </nav>
 
-      {/* Footer — User Guide (always-visible help) and Settings (the hub
-          for admin/power tools), kept out of the primary groups above so
-          day-to-day nav stays focused. Pinned just above the user badge. */}
+      {/* Footer — User Guide + Help (always-visible assistance) and Settings
+          (the hub for admin/power tools), kept out of the primary groups
+          above so day-to-day nav stays focused. Help is the
+          operation-oriented recipes page (sits next to the User Guide's
+          what-does-this-do overview). Pinned just above the user badge. */}
       <div className="px-2 pb-1 border-t border-line pt-2 space-y-0.5">
         <RailLink
           href={GUIDE_NAV_ITEM.href}
@@ -246,6 +250,14 @@ function Rail({
           icon={GUIDE_NAV_ITEM.icon}
           description={t(GUIDE_NAV_ITEM.descriptionKey)}
           active={isActive(GUIDE_NAV_ITEM.href, pathname)}
+          onClick={onClose}
+        />
+        <RailLink
+          href={HELP_NAV_ITEM.href}
+          label={t(HELP_NAV_ITEM.labelKey)}
+          icon={HELP_NAV_ITEM.icon}
+          description={t(HELP_NAV_ITEM.descriptionKey)}
+          active={isActive(HELP_NAV_ITEM.href, pathname)}
           onClick={onClose}
         />
         <RailLink

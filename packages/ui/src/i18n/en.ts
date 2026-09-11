@@ -52,12 +52,15 @@ export const en = {
     pulse: "Pulse",
     settings: "Settings",
     userGuide: "User Guide",
+    help: "Help & How-to",
 
     descNewChat: "Start a fresh conversation with the Executive.",
     descBriefing: "Land on a daily brief of what's happened and what needs you.",
     descPulse: "The Executive's memory and heartbeat — what it knows and the rhythm it runs on.",
     descSettings: "Configuration, diagnostics, and power-user tools.",
     descUserGuide: "Plain-language overviews of every feature — what each one is and what it does.",
+    descHelp:
+      "Step-by-step recipes — switching models, starting a new chat, troubleshooting errors.",
   },
 
   navGroup: {
@@ -136,6 +139,7 @@ export const en = {
     watchlist: "Watch list",
     settings: "Settings",
     guide: "User Guide",
+    help: "Help",
     clients: "Client Companies",
   },
 
@@ -435,6 +439,74 @@ export const en = {
       title: "User Guide",
       subtitle: "Plain-language overviews of every feature.",
       empty: "Nothing here yet.",
+    },
+    help: {
+      title: "Help & How-to",
+      subtitle:
+        "Step-by-step recipes. This page complements /guide: the guide explains what each feature is and does; here we explain how to do the things you'll do most.",
+      tocTitle: "On this page",
+      sectionLmStudio: "Switch to a local LM Studio (on-device inference)",
+      sectionLmStudioLead:
+        "Use when: LM Studio is already running locally and you want to wire it in.",
+      sectionLmStudioStep1: "Open Settings → AI providers.",
+      sectionLmStudioStep2:
+        "Click + Add provider and fill four fields: name = LM Studio Local; base URL = http://127.0.0.1:1234/v1; API key = sk-lm-duPznAMl:sqE4Jt9mrENVCu7iI3K7 (use any non-empty string if LM Studio has no token); models = zai-org/glm-4.7-flash (one per line).",
+      sectionLmStudioStep3:
+        "Save, then click Test on the card — a green 200 / 200ms / N models row means it can reach the endpoint.",
+      sectionLmStudioStep4:
+        "Open Council → Executive and pick zai-org/glm-4.7-flash (or whatever slug you listed) from the model dropdown. Takes effect immediately — no restart.",
+      sectionLmStudioTip:
+        "Avoid pure reasoning/thinking models for chat defaults — they'll spend the whole token budget on internal reasoning and the visible content stays empty.",
+      sectionZhipuai: "Switch back to remote ZhipuAI GLM (default)",
+      sectionZhipuaiLead:
+        "Use when: you want a stable, high-quality cloud model. This is the default and needs no setup beyond .env.",
+      sectionZhipuaiStep1:
+        "Confirm .env has ZHIPUAI_ENABLED=true and ZHIPUAI_API_KEY=... set.",
+      sectionZhipuaiStep2:
+        "In Council → Executive, pick glm-4-flash (or glm-4-air / glm-4-plus) from the model dropdown.",
+      sectionZhipuaiStep3:
+        "No restart needed. If the upstream is down, you'll see a 502 — switch to a local or OpenRouter model instead.",
+      sectionOpenrouter: "Wire up OpenRouter (one key, many models)",
+      sectionOpenrouterLead:
+        "Use when: you want GPT-4o / Claude 3.5 / Llama 3.3 etc. without signing up for each provider.",
+      sectionOpenrouterStep1:
+        "Set OPENROUTER_ENABLED=true and OPENROUTER_API_KEY=sk-or-... in .env.",
+      sectionOpenrouterStep2:
+        "Restart the backend (so the OpenRouter slugs appear in the Council dropdown).",
+      sectionOpenrouterStep3:
+        "Pick openai/gpt-4o or anthropic/claude-3.5-sonnet from the model dropdown.",
+      sectionLanguage: "Switch interface language (Chinese ↔ English)",
+      sectionLanguageLead:
+        "Use when: the menu is in the wrong language, or you're demoing to a colleague.",
+      sectionLanguageStep1:
+        "Click the language pill in the top-right corner of the TopBar, or go to Settings → Interface language.",
+      sectionLanguageStep2:
+        "Choice persists in localStorage (oe_lang) — restores automatically on next visit.",
+      sectionNewChat: "Start a new chat",
+      sectionNewChatLead:
+        "Use when: starting a fresh topic with no carry-over from past context.",
+      sectionNewChatStep1:
+        "Click the + New chat button at the top of the sidebar, or visit /?new=1.",
+      sectionNewChatStep2:
+        "Past sessions stay listed under Recent in the sidebar — click any to resume.",
+      sectionCouncil: "Tweak per-agent models in Council",
+      sectionCouncilLead:
+        "Use when: you want different specialists on different models (e.g. CSO on opus, Executive on sonnet).",
+      sectionCouncilStep1: "Open Council (Settings → Advanced → Agent Council).",
+      sectionCouncilStep2:
+        "Each specialist card has a Model dropdown — change it and Save. Takes effect immediately, no restart.",
+      sectionTroubleshoot: 'Troubleshoot: chat says "internal error"',
+      sectionTroubleshootLead:
+        'Use when: you see "An internal error occurred. Please try again."',
+      sectionTroubleshootStep1:
+        "Check the backend log — backend.log in dev, fly flyctl logs -a openexec-api-dev in prod.",
+      sectionTroubleshootStep2:
+        "Two most common causes: (1) a local model is selected but LM Studio / Ollama isn't running; (2) a pure reasoning model is selected (token budget goes to thinking, visible content stays empty).",
+      sectionTroubleshootStep3:
+        "Fix: (1) switch the Council model to glm-4-flash; (2) or start LM Studio; (3) or add/enable the right provider in Settings → AI providers.",
+      sectionDocsLink: "Full reference: docs/providers.md →",
+      sectionOpenSettings: "Open Settings →",
+      sectionOpenCouncil: "Open Council →",
     },
     demo: {
       title: "Company Simulator",
