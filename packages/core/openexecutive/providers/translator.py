@@ -722,6 +722,18 @@ class StreamAccumulator:
         Called by the OpenRouterProvider stream wrapper when SSE closes,
         before the consumer awaits ``stream.get_final_message()``.
         """
+        # Reasoning-model fallback at close-of-stream (covers upstreams
+        # that close without sending a finish_reason chunk — LM Studio's
+        # reasoning endpoint has been observed to drop the connection
+        # after reasoning finishes, leaving ``_text_started`` False and
+        # ``_finish_reason`` None even though ``_reasoning_buf`` has the
+        # model's intended output). Mirrors the in-stream fallback in
+        # ``feed()`` for the path where the close lands us here before
+        # any finish_reason chunk arrives.
+        if not self._text_started and self._reasoning_buf and not self._finish_reason:
+            self._text_started = True
+            self._text_buf.append("".join(self._reasoning_buf))
+
         content_blocks: list[SimpleNamespace] = []
         if self._text_started:
             content_blocks.append(
